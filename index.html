@@ -535,9 +535,247 @@
       animation: fadeIn 400ms ease both;
     }
 
+    .forecast {
+      display: grid;
+      gap: 12px;
+      animation: riseIn 900ms 380ms ease both;
+    }
+
+    .forecast-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink);
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      font-weight: 950;
+    }
+
+    .forecast-title span:last-child {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .forecast-list {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(72px, 1fr));
+      gap: 8px;
+    }
+
+    .forecast-day {
+      min-height: 44px;
+      border: 1px solid rgba(255,255,255,0.78);
+      border-radius: 7px;
+      background: rgba(255,255,255,0.52);
+      color: var(--muted);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 10px 22px rgba(69,104,255,0.08);
+      font-size: 0.82rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .forecast-day[aria-pressed="true"] {
+      background: linear-gradient(135deg, var(--blue), var(--cyan) 38%, var(--pink) 72%, var(--gold));
+      background-size: 220% 220%;
+      color: #fff;
+      box-shadow: 0 0 22px rgba(0,200,255,0.34), 0 16px 34px rgba(255,85,199,0.2);
+      animation: selectedPulse 2.1s ease-in-out infinite, buttonShimmer 3.2s linear infinite;
+    }
+
+    .forecast-detail {
+      min-height: 156px;
+    }
+
+    .forecast-card {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 10px 16px;
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,0.76);
+      border-radius: 8px;
+      padding: 18px;
+      background:
+        linear-gradient(150deg, rgba(255,255,255,0.78), rgba(255,255,255,0.42)),
+        radial-gradient(circle at 35% 20%, rgba(255,212,74,0.22), transparent 46%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.92), 0 14px 28px rgba(69,104,255,0.09);
+    }
+
+    .forecast-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 0 35%, rgba(255,255,255,0.58) 49%, transparent 64% 100%);
+      transform: translateX(-120%);
+      animation: miniSweep 4.2s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+
+    .forecast-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .forecast-date {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .forecast-emoji {
+      font-size: 3.4rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.9));
+    }
+
+    .forecast-weather {
+      color: var(--ink);
+      font-size: clamp(1.1rem, 3vw, 1.45rem);
+      font-weight: 950;
+      line-height: 1.3;
+    }
+
+    .forecast-temp {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      color: var(--ink);
+      font-weight: 950;
+    }
+
+    .forecast-temp strong {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+    }
+
+    .forecast-temp span {
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
+    .forecast-rain {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .hourly {
+      display: grid;
+      gap: 10px;
+    }
+
+    .hourly-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink);
+      font-size: 0.95rem;
+      font-weight: 950;
+    }
+
+    .hourly-title span:last-child {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .hourly-list {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 2px 6px 12px 2px;
+      scroll-snap-type: x proximity;
+      scroll-padding-inline: 2px;
+      scrollbar-width: thin;
+      mask-image: linear-gradient(90deg, #000 0 calc(100% - 34px), transparent 100%);
+      -webkit-mask-image: linear-gradient(90deg, #000 0 calc(100% - 34px), transparent 100%);
+    }
+
+    .hourly-list::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .hourly-list::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.38);
+      border-radius: 999px;
+    }
+
+    .hourly-list::-webkit-scrollbar-thumb {
+      background: linear-gradient(90deg, var(--cyan), var(--pink), var(--gold));
+      border-radius: 999px;
+    }
+
+    .hourly-card {
+      position: relative;
+      overflow: hidden;
+      flex: 0 0 92px;
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      min-height: 118px;
+      border: 1px solid rgba(255,255,255,0.74);
+      border-radius: 8px;
+      padding: 10px 8px;
+      background:
+        linear-gradient(150deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4)),
+        radial-gradient(circle at 35% 18%, rgba(0,200,255,0.18), transparent 46%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 12px 24px rgba(69,104,255,0.08);
+      scroll-snap-align: start;
+    }
+
+    .hourly-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 0 34%, rgba(255,255,255,0.5) 50%, transparent 66% 100%);
+      transform: translateX(-120%);
+      animation: miniSweep 4.6s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+
+    .hourly-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hourly-time {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 950;
+    }
+
+    .hourly-emoji {
+      font-size: 1.7rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
+    }
+
+    .hourly-temp {
+      color: var(--ink);
+      font-size: 1.06rem;
+      font-weight: 950;
+    }
+
+    .hourly-rain {
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
     .skeleton .temperature strong,
     .skeleton .condition,
-    .skeleton .metric strong {
+    .skeleton .metric strong,
+    .skeleton .forecast-card,
+    .skeleton .hourly-card {
       color: transparent;
       background: linear-gradient(90deg, rgba(255,255,255,0.3), rgba(255,255,255,0.96), rgba(255,255,255,0.3));
       background-size: 240% 100%;
@@ -636,6 +874,14 @@
         grid-template-columns: 1fr 1fr;
       }
 
+      .forecast-list {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .forecast-card {
+        grid-template-columns: auto 1fr;
+      }
+
       .city-tabs,
       .secret-form,
       .search-form {
@@ -704,6 +950,22 @@
           </div>
 
           <div class="message" id="message"></div>
+
+          <section class="forecast" aria-label="今後一週間の天気">
+            <div class="forecast-title">
+              <span>7日間予報</span>
+              <span>日付を選択</span>
+            </div>
+            <div class="forecast-list" id="forecastList"></div>
+            <div class="forecast-detail" id="forecastDetail"></div>
+            <section class="hourly" aria-label="一時間ごとの天気">
+              <div class="hourly-title">
+                <span>1時間ごとの予報</span>
+                <span>横スクロール</span>
+              </div>
+              <div class="hourly-list" id="hourlyList"></div>
+            </section>
+          </section>
         </div>
 
         <nav class="city-tabs" aria-label="都市を切り替え">
@@ -798,6 +1060,9 @@
       weatherCode: document.querySelector("#weatherCode"),
       dataSource: document.querySelector("#dataSource"),
       message: document.querySelector("#message"),
+      forecastList: document.querySelector("#forecastList"),
+      forecastDetail: document.querySelector("#forecastDetail"),
+      hourlyList: document.querySelector("#hourlyList"),
       buttons: document.querySelectorAll("[data-city]"),
       secretForm: document.querySelector("#secretForm"),
       passphrase: document.querySelector("#passphrase"),
@@ -810,6 +1075,9 @@
     let activeRequest = null;
     let currentTemperature = 0;
     let advancedUnlocked = sessionStorage.getItem("otenki-advanced") === "yes";
+    let selectedForecastIndex = 0;
+    let activeDailyForecast = null;
+    let activeHourlyForecast = null;
 
     const passConfig = {
       salt: "OTENKI:v2:advanced-weather",
@@ -908,6 +1176,28 @@
       }).format(new Date(value));
     }
 
+    function formatForecastDate(value, index) {
+      if (!value) return "--";
+      const label = new Intl.DateTimeFormat("ja-JP", {
+        month: "numeric",
+        day: "numeric",
+        weekday: "short",
+        timeZone: "Asia/Tokyo"
+      }).format(new Date(`${value}T00:00:00+09:00`));
+      return index === 0 ? `今日 ${label}` : label;
+    }
+
+    function formatForecastTab(value, index) {
+      if (index === 0) return "今日";
+      if (index === 1) return "明日";
+      if (!value) return "--";
+      return new Intl.DateTimeFormat("ja-JP", {
+        month: "numeric",
+        day: "numeric",
+        timeZone: "Asia/Tokyo"
+      }).format(new Date(`${value}T00:00:00+09:00`));
+    }
+
     function setStatus(text, tone) {
       elements.status.textContent = text;
       if (tone) {
@@ -949,10 +1239,187 @@
       elements.weatherCode.textContent = "--";
       elements.dataSource.textContent = "Open-Meteo";
       elements.message.textContent = "最新データを読み込んでいます。";
+      selectedForecastIndex = 0;
+      activeDailyForecast = null;
+      activeHourlyForecast = null;
+      elements.forecastList.innerHTML = Array.from({ length: 7 }, (_, index) => (
+        `<button class="forecast-day" type="button" aria-pressed="${index === 0}">--</button>`
+      )).join("");
+      elements.forecastDetail.innerHTML = `<article class="forecast-card">
+        <div class="forecast-date">--</div>
+        <div class="forecast-emoji">✨</div>
+        <div>
+          <div class="forecast-weather">取得中</div>
+          <div class="forecast-temp"><strong>--</strong><span>/ --</span></div>
+          <div class="forecast-rain">降水 --</div>
+        </div>
+      </article>`;
+      elements.hourlyList.innerHTML = Array.from({ length: 8 }, (_, index) => (
+        `<article class="hourly-card" style="--delay:${index * 0.08}s">
+          <div class="hourly-time">--:--</div>
+          <div class="hourly-emoji">✨</div>
+          <div class="hourly-temp">--°</div>
+          <div class="hourly-rain">降水 --</div>
+        </article>`
+      )).join("");
       setStatus("取得中", "");
     }
 
-    function renderWeather(city, current, source) {
+    function buildFallbackDaily(seed) {
+      const start = new Date(`${seed.time.slice(0, 10)}T00:00:00+09:00`);
+      const times = [];
+      const codes = [];
+      const highs = [];
+      const lows = [];
+      const rain = [];
+
+      for (let i = 0; i < 7; i += 1) {
+        const date = new Date(start);
+        date.setDate(start.getDate() + i);
+        times.push(date.toISOString().slice(0, 10));
+        codes.push([seed.code, 1, 2, 3, 61, 80, 0][i % 7]);
+        highs.push(seed.temperature + (i % 3) - 1);
+        lows.push(seed.temperature - 5 - (i % 2));
+        rain.push([10, 20, 30, 45, 55, 35, 15][i]);
+      }
+
+      return {
+        time: times,
+        weather_code: codes,
+        temperature_2m_max: highs,
+        temperature_2m_min: lows,
+        precipitation_probability_max: rain
+      };
+    }
+
+    function buildFallbackHourly(seed) {
+      const start = new Date(`${seed.time.slice(0, 10)}T00:00:00+09:00`);
+      const times = [];
+      const codes = [];
+      const temps = [];
+      const rain = [];
+
+      for (let day = 0; day < 7; day += 1) {
+        for (let hour = 0; hour < 24; hour += 1) {
+          const date = new Date(start);
+          date.setDate(start.getDate() + day);
+          date.setHours(hour, 0, 0, 0);
+          times.push(date.toISOString().slice(0, 16));
+          codes.push([seed.code, 1, 2, 3, 61, 80][(day + Math.floor(hour / 4)) % 6]);
+          temps.push(seed.temperature + Math.round(Math.sin((hour - 7) / 24 * Math.PI * 2) * 3) + (day % 3) - 1);
+          rain.push([10, 15, 20, 35, 55, 75, 45, 25][(day + Math.floor(hour / 3)) % 8]);
+        }
+      }
+
+      return {
+        time: times,
+        weather_code: codes,
+        temperature_2m: temps,
+        precipitation_probability: rain
+      };
+    }
+
+    function formatHour(value) {
+      if (!value) return "--:--";
+      return new Intl.DateTimeFormat("ja-JP", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Tokyo"
+      }).format(new Date(value));
+    }
+
+    function renderHourlyForecast(date) {
+      const hourly = activeHourlyForecast;
+      if (!hourly || !hourly.time || !hourly.time.length || !date) {
+        elements.hourlyList.innerHTML = "";
+        return;
+      }
+
+      const rows = hourly.time
+        .map((time, index) => ({
+          time,
+          code: Number(hourly.weather_code?.[index]),
+          temperature: Number(hourly.temperature_2m?.[index]),
+          rain: Number(hourly.precipitation_probability?.[index])
+        }))
+        .filter((row) => row.time.startsWith(date));
+
+      if (!rows.length) {
+        elements.hourlyList.innerHTML = `<article class="hourly-card">
+          <div class="hourly-time">--</div>
+          <div class="hourly-emoji">🌡️</div>
+          <div class="hourly-temp">--°</div>
+          <div class="hourly-rain">時間別データなし</div>
+        </article>`;
+        return;
+      }
+
+      elements.hourlyList.innerHTML = rows.map((row, index) => {
+        const [emoji] = getWeatherLabel(row.code);
+        return `<article class="hourly-card" style="--delay:${index * 0.035}s">
+          <div class="hourly-time">${formatHour(row.time)}</div>
+          <div class="hourly-emoji" aria-hidden="true">${emoji}</div>
+          <div class="hourly-temp">${Number.isFinite(row.temperature) ? Math.round(row.temperature) : "--"}°</div>
+          <div class="hourly-rain">降水 ${Number.isFinite(row.rain) ? `${Math.round(row.rain)}%` : "--"}</div>
+        </article>`;
+      }).join("");
+    }
+
+    function renderForecastDetail(index) {
+      const daily = activeDailyForecast;
+      if (!daily || !daily.time || !daily.time.length) {
+        elements.forecastDetail.innerHTML = "";
+        return;
+      }
+
+      const date = daily.time[index];
+      const code = Number(daily.weather_code?.[index]);
+      const high = Math.round(Number(daily.temperature_2m_max?.[index]));
+      const low = Math.round(Number(daily.temperature_2m_min?.[index]));
+      const rain = daily.precipitation_probability_max?.[index];
+      const [emoji, label] = getWeatherLabel(code);
+
+      elements.forecastDetail.innerHTML = `<article class="forecast-card" style="--delay:${index * 0.12}s">
+        <div class="forecast-date">${formatForecastDate(date, index)}</div>
+        <div class="forecast-emoji" aria-hidden="true">${emoji}</div>
+        <div>
+          <div class="forecast-weather">${label}</div>
+          <div class="forecast-temp"><strong>${Number.isFinite(high) ? high : "--"}°</strong><span>/ ${Number.isFinite(low) ? low : "--"}°</span></div>
+          <div class="forecast-rain">降水 ${Number.isFinite(Number(rain)) ? `${Math.round(Number(rain))}%` : "--"}</div>
+        </div>
+      </article>`;
+      renderHourlyForecast(date);
+    }
+
+    function selectForecastDay(index) {
+      selectedForecastIndex = index;
+      elements.forecastList.querySelectorAll("[data-forecast-index]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(Number(button.dataset.forecastIndex) === selectedForecastIndex));
+      });
+      renderForecastDetail(selectedForecastIndex);
+    }
+
+    function renderForecast(daily, hourly) {
+      if (!daily || !daily.time || !daily.time.length) {
+        elements.forecastList.innerHTML = "";
+        elements.forecastDetail.innerHTML = "";
+        elements.hourlyList.innerHTML = "";
+        return;
+      }
+
+      activeDailyForecast = daily;
+      activeHourlyForecast = hourly;
+      selectedForecastIndex = Math.min(selectedForecastIndex, daily.time.length - 1);
+      elements.forecastList.innerHTML = daily.time.slice(0, 7).map((date, index) => (
+        `<button class="forecast-day" type="button" data-forecast-index="${index}" aria-pressed="${index === selectedForecastIndex}">
+          ${formatForecastTab(date, index)}
+        </button>`
+      )).join("");
+      renderForecastDetail(selectedForecastIndex);
+    }
+
+    function renderWeather(city, current, daily, hourly, source) {
       const code = Number(current.weather_code);
       const temperature = Math.round(Number(current.temperature_2m));
       const humidity = Number(current.relative_humidity_2m);
@@ -966,14 +1433,15 @@
       elements.weatherText.textContent = label;
       elements.observedAt.textContent = formatTime(current.time);
       elements.weatherCode.textContent = String(code);
+      renderForecast(daily, hourly);
 
       if (source === "live") {
         elements.dataSource.textContent = "Open-Meteo";
-        elements.message.textContent = `${city.name}の現在の天気です。`;
+        elements.message.textContent = `${city.name}の現在の天気と7日間予報です。`;
         setStatus("更新済み", "ok");
       } else {
         elements.dataSource.textContent = "サンプル";
-        elements.message.textContent = "APIに接続できないため、画面確認用のサンプル値を表示しています。";
+        elements.message.textContent = "APIに接続できないため、画面確認用のサンプル値と予報を表示しています。";
         setStatus("サンプル表示", "demo");
       }
     }
@@ -998,6 +1466,9 @@
         latitude: city.latitude,
         longitude: city.longitude,
         current: "temperature_2m,relative_humidity_2m,weather_code",
+        daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+        hourly: "temperature_2m,weather_code,precipitation_probability",
+        forecast_days: "7",
         timezone: "Asia/Tokyo"
       });
 
@@ -1012,7 +1483,7 @@
         }
 
         const data = await response.json();
-        renderWeather(city, data.current, "live");
+        renderWeather(city, data.current, data.daily, data.hourly, "live");
       } catch (error) {
         const fallback = city.fallback || { temperature: 28, humidity: 65, code: 2, time: "2026-07-04T12:00" };
         renderWeather(city, {
@@ -1020,7 +1491,7 @@
           relative_humidity_2m: fallback.humidity,
           weather_code: fallback.code,
           time: fallback.time
-        }, "demo");
+        }, buildFallbackDaily(fallback), buildFallbackHourly(fallback), "demo");
       } finally {
         clearTimeout(timeoutId);
       }
@@ -1183,6 +1654,12 @@
 
     elements.buttons.forEach((button) => {
       button.addEventListener("click", () => fetchWeatherFor(cities[button.dataset.city], button.dataset.city));
+    });
+
+    elements.forecastList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-forecast-index]");
+      if (!button) return;
+      selectForecastDay(Number(button.dataset.forecastIndex));
     });
 
     elements.secretForm.addEventListener("submit", handleSecret);
