@@ -1026,10 +1026,86 @@
       }
     }
 
-    async function searchPlace(placeName) {
+    function compactPlaceText(value) {
+      return String(value || "")
+        .normalize("NFKC")
+        .toLowerCase()
+        .replace(/[ぁ-ん]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 0x60))
+        .replace(/[\s,，、.．・/／\\\-＿_()（）[\]【】{}「」『』:：;；]/g, "");
+    }
+
+    function stripAdministrativeSuffixes(value) {
+      return compactPlaceText(value).replace(/(都|道|府|県|市|区|町|村|郡|州|省|県庁所在地|prefecture|city|ward|town|village|county|state|province|country)/g, "");
+    }
+
+    function scoreField(inputCompact, inputLoose, fieldValue, weight) {
+      const fieldCompact = compactPlaceText(fieldValue);
+      const fieldLoose = stripAdministrativeSuffixes(fieldValue);
+      if (!fieldCompact) return 0;
+
+      let score = 0;
+      if (inputCompact === fieldCompact) score += weight * 3;
+      if (inputLoose === fieldLoose) score += weight * 2.5;
+      if (inputCompact.includes(fieldCompact)) score += weight * 2;
+      if (fieldCompact.includes(inputCompact)) score += weight * 1.3;
+      if (fieldLoose && inputLoose.includes(fieldLoose)) score += weight * 1.6;
+      if (fieldLoose && fieldLoose.includes(inputLoose)) score += weight;
+      return score;
+    }
+
+    function scorePlaceCandidate(result, originalInput) {
+      const inputCompact = compactPlaceText(originalInput);
+      const inputLoose = stripAdministrativeSuffixes(originalInput);
+      let score = 0;
+
+      score += scoreField(inputCompact, inputLoose, result.name, 30);
+      score += scoreField(inputCompact, inputLoose, result.admin1, 22);
+      score += scoreField(inputCompact, inputLoose, result.admin2, 18);
+      score += scoreField(inputCompact, inputLoose, result.admin3, 12);
+      score += scoreField(inputCompact, inputLoose, result.country, 14);
+      score += scoreField(inputCompact, inputLoose, result.country_code, 10);
+
+      const combined = [result.name, result.admin3, result.admin2, result.admin1, result.country, result.country_code]
+        .filter(Boolean)
+        .join("");
+      const combinedCompact = compactPlaceText(combined);
+      const combinedLoose = stripAdministrativeSuffixes(combined);
+      if (combinedCompact.includes(inputCompact)) score += 24;
+      if (combinedLoose.includes(inputLoose)) score += 18;
+
+      if (result.country_code === "JP" && /日本|japan|jp/.test(originalInput.toLowerCase())) score += 12;
+      return score + (result.population ? Math.min(Math.log10(result.population), 7) : 0);
+    }
+
+    function chooseBestPlace(results, originalInput) {
+      return results
+        .map((result, index) => ({ result, index, score: scorePlaceCandidate(result, originalInput) }))
+        .sort((a, b) => b.score - a.score || a.index - b.index)[0].result;
+    }
+
+    function uniqueValues(values) {
+      return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+    }
+
+    function buildPlaceSearchTerms(placeName) {
+      const normalized = String(placeName || "").normalize("NFKC");
+      const parts = normalized
+        .split(/[\s,，、・/／\\()（）[\]【】{}「」『』:：;；]+/)
+        .filter(Boolean);
+      const japaneseAdminParts = normalized.match(/[一-龥々ぁ-んァ-ンー]+?(?:都|道|府|県|市|区|町|村)/g) || [];
+      const baseParts = uniqueValues([...parts, ...japaneseAdminParts])
+        .filter((part) => !/^(日本|japan|jp)$/i.test(part));
+      const suffixTerms = baseParts
+        .filter((part) => /[一-龥々ぁ-んァ-ンー]/.test(part) && !/(都|道|府|県|市|区|町|村)$/.test(part))
+        .flatMap((part) => [`${part}市`, `${part}町`, `${part}村`, `${part}区`]);
+
+      return uniqueValues([normalized, ...baseParts, ...suffixTerms]).slice(0, 12);
+    }
+
+    async function fetchGeocodingResults(searchTerm) {
       const params = new URLSearchParams({
-        name: placeName,
-        count: "1",
+        name: searchTerm,
+        count: "20",
         language: "ja",
         format: "json"
       });
@@ -1038,12 +1114,27 @@
         throw new Error(`HTTP ${response.status}`);
       }
       const data = await response.json();
-      if (!data.results || !data.results.length) {
+      return data.results || [];
+    }
+
+    async function searchPlace(placeName) {
+      const resultsById = new Map();
+      const searchTerms = buildPlaceSearchTerms(placeName);
+
+      for (const term of searchTerms) {
+        const results = await fetchGeocodingResults(term);
+        results.forEach((result) => {
+          resultsById.set(result.id || `${result.latitude},${result.longitude},${result.name}`, result);
+        });
+      }
+
+      const results = [...resultsById.values()];
+      if (!results.length) {
         throw new Error("not found");
       }
-      const result = data.results[0];
+      const result = chooseBestPlace(results, placeName);
       return {
-        name: [result.name, result.admin1, result.country].filter(Boolean).join(" / "),
+        name: [result.name, result.admin2, result.admin1, result.country].filter(Boolean).join(" / "),
         latitude: result.latitude,
         longitude: result.longitude
       };
