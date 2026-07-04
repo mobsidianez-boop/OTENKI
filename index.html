@@ -8,15 +8,16 @@
     :root {
       color-scheme: light;
       --ink: #182033;
-      --muted: #65708a;
-      --panel: rgba(255, 255, 255, 0.78);
-      --line: rgba(255, 255, 255, 0.72);
-      --cyan: #00a9e8;
+      --muted: #61708a;
+      --glass: rgba(255, 255, 255, 0.74);
+      --line: rgba(255, 255, 255, 0.78);
       --blue: #4568ff;
-      --pink: #ff62b2;
-      --gold: #ffc94b;
-      --green: #21c997;
-      --shadow: 0 30px 90px rgba(35, 45, 80, 0.22);
+      --cyan: #00c8ff;
+      --pink: #ff55c7;
+      --violet: #8b5cff;
+      --gold: #ffd44a;
+      --green: #2ee6a6;
+      --shadow: 0 34px 110px rgba(43, 57, 112, 0.25);
       font-family: "Inter", "Noto Sans JP", "Yu Gothic UI", "Hiragino Sans", system-ui, sans-serif;
     }
 
@@ -29,30 +30,43 @@
       margin: 0;
       color: var(--ink);
       background:
-        radial-gradient(circle at 12% 18%, rgba(255, 201, 75, 0.58), transparent 24%),
-        radial-gradient(circle at 86% 16%, rgba(255, 98, 178, 0.44), transparent 24%),
-        radial-gradient(circle at 82% 82%, rgba(0, 169, 232, 0.42), transparent 28%),
-        linear-gradient(135deg, #eaf9ff 0%, #fff7fb 44%, #fff9e8 100%);
+        radial-gradient(circle at 12% 12%, rgba(255, 212, 74, 0.72), transparent 24%),
+        radial-gradient(circle at 88% 16%, rgba(255, 85, 199, 0.54), transparent 23%),
+        radial-gradient(circle at 82% 86%, rgba(0, 200, 255, 0.48), transparent 30%),
+        radial-gradient(circle at 16% 84%, rgba(46, 230, 166, 0.38), transparent 26%),
+        linear-gradient(135deg, #eafdff 0%, #fff3fe 44%, #fff9df 100%);
       display: grid;
       place-items: center;
       padding: 22px;
       overflow-x: hidden;
     }
 
-    body::before {
+    body::before,
+    body::after {
       content: "";
       position: fixed;
-      inset: -40%;
-      background:
-        conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.64), transparent 18%),
-        repeating-linear-gradient(90deg, transparent 0 42px, rgba(255,255,255,0.18) 43px 44px);
-      animation: skySpin 28s linear infinite;
-      opacity: 0.55;
+      inset: -45%;
       pointer-events: none;
     }
 
+    body::before {
+      background:
+        conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.74), transparent 15%),
+        repeating-linear-gradient(95deg, transparent 0 40px, rgba(255,255,255,0.22) 41px 42px);
+      animation: skySpin 26s linear infinite;
+      opacity: 0.56;
+    }
+
+    body::after {
+      background:
+        radial-gradient(circle, rgba(255,255,255,0.92) 0 1px, transparent 2px) 0 0 / 46px 46px,
+        radial-gradient(circle, rgba(255,255,255,0.72) 0 1px, transparent 2px) 18px 28px / 72px 72px;
+      animation: starDrift 20s linear infinite;
+      opacity: 0.62;
+    }
+
     main {
-      width: min(100%, 820px);
+      width: min(100%, 860px);
       position: relative;
       z-index: 1;
     }
@@ -60,12 +74,12 @@
     .app {
       position: relative;
       overflow: hidden;
-      min-height: 650px;
+      min-height: 670px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: var(--panel);
-      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.88);
-      backdrop-filter: blur(22px) saturate(1.25);
+      background: var(--glass);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.96);
+      backdrop-filter: blur(24px) saturate(1.35);
       isolation: isolate;
     }
 
@@ -80,19 +94,39 @@
 
     .app::before {
       background:
-        linear-gradient(115deg, rgba(255,255,255,0.92), rgba(255,255,255,0.34) 40%, rgba(0,169,232,0.16)),
-        radial-gradient(circle at 28% 24%, rgba(255,255,255,0.95), transparent 18%),
-        radial-gradient(circle at 86% 68%, rgba(255,98,178,0.18), transparent 24%);
+        linear-gradient(115deg, rgba(255,255,255,0.96), rgba(255,255,255,0.32) 42%, rgba(0,200,255,0.2)),
+        radial-gradient(circle at 22% 22%, rgba(255,255,255,0.96), transparent 17%),
+        radial-gradient(circle at 82% 70%, rgba(255,85,199,0.24), transparent 26%),
+        linear-gradient(90deg, rgba(69,104,255,0.08), transparent, rgba(255,212,74,0.12));
     }
 
     .app::after {
-      width: 42%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.52), transparent);
-      transform: skewX(-18deg) translateX(-155%);
-      animation: sweep 5.6s ease-in-out infinite;
+      width: 46%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.66), transparent);
+      transform: skewX(-18deg) translateX(-160%);
+      animation: sweep 4.8s ease-in-out infinite;
     }
 
-    .sparkles {
+    .rainbow-border {
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      padding: 2px;
+      background: linear-gradient(135deg, var(--gold), var(--pink), var(--violet), var(--cyan), var(--green), var(--gold));
+      background-size: 260% 260%;
+      opacity: 0.72;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      pointer-events: none;
+      animation: borderFlow 5.8s linear infinite;
+      z-index: 2;
+    }
+
+    .sparkles,
+    .shooting-stars,
+    .glow-rings {
       position: absolute;
       inset: 0;
       pointer-events: none;
@@ -106,11 +140,59 @@
       height: var(--size);
       left: var(--x);
       top: var(--y);
-      border-radius: 50%;
-      background: radial-gradient(circle, #fff 0 20%, var(--color) 22% 45%, transparent 48%);
-      filter: drop-shadow(0 0 12px var(--color));
       opacity: 0;
       animation: twinkle var(--dur) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    .sparkle::before,
+    .sparkle::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      background: var(--color);
+      filter: drop-shadow(0 0 10px var(--color)) drop-shadow(0 0 18px rgba(255,255,255,0.85));
+    }
+
+    .sparkle::before {
+      width: 100%;
+      height: 22%;
+      border-radius: 999px;
+    }
+
+    .sparkle::after {
+      width: 22%;
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .shooting-star {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 160px;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.98), var(--color));
+      filter: drop-shadow(0 0 12px var(--color));
+      transform: rotate(-24deg) translateX(-180px);
+      opacity: 0;
+      animation: shoot var(--dur) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    .glow-ring {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size);
+      height: var(--size);
+      border: 1px solid rgba(255, 255, 255, 0.84);
+      border-radius: 50%;
+      box-shadow: 0 0 20px var(--color), inset 0 0 18px rgba(255,255,255,0.45);
+      opacity: 0.32;
+      animation: ringFloat var(--dur) ease-in-out infinite;
       animation-delay: var(--delay);
     }
 
@@ -118,10 +200,10 @@
       position: relative;
       z-index: 1;
       display: grid;
-      min-height: 650px;
+      min-height: 670px;
       grid-template-rows: auto 1fr auto;
       gap: 28px;
-      padding: clamp(22px, 5vw, 48px);
+      padding: clamp(22px, 5vw, 50px);
     }
 
     header {
@@ -134,9 +216,10 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(1.5rem, 4.2vw, 2.5rem);
-      line-height: 1.12;
+      font-size: clamp(1.6rem, 4.4vw, 2.65rem);
+      line-height: 1.1;
       letter-spacing: 0;
+      text-shadow: 0 0 24px rgba(255,255,255,0.92);
     }
 
     .subtitle {
@@ -147,32 +230,33 @@
     }
 
     .status {
-      min-width: 118px;
-      border: 1px solid rgba(255,255,255,0.76);
+      min-width: 120px;
+      border: 1px solid rgba(255,255,255,0.86);
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.66);
+      background: rgba(255, 255, 255, 0.7);
       color: var(--muted);
       font-size: 0.82rem;
       font-weight: 900;
       padding: 10px 14px;
       text-align: center;
       white-space: nowrap;
-      box-shadow: 0 10px 30px rgba(69,104,255,0.12);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.4), 0 14px 32px rgba(69,104,255,0.16);
+      animation: statusGlow 3s ease-in-out infinite;
     }
 
     .status[data-tone="ok"] {
-      color: #126c4d;
-      background: rgba(225, 255, 241, 0.82);
+      color: #116c4c;
+      background: rgba(225, 255, 241, 0.86);
     }
 
     .status[data-tone="demo"] {
       color: #8a5a00;
-      background: rgba(255, 246, 209, 0.86);
+      background: rgba(255, 247, 209, 0.88);
     }
 
     .status[data-tone="error"] {
       color: #a73557;
-      background: rgba(255, 231, 241, 0.86);
+      background: rgba(255, 231, 241, 0.88);
     }
 
     .hero {
@@ -195,13 +279,13 @@
     .pin {
       display: inline-grid;
       place-items: center;
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #fff, #e9fbff);
+      background: linear-gradient(135deg, #fff, #e5fbff 50%, #fff4cf);
       color: var(--blue);
-      box-shadow: 0 10px 24px rgba(0, 169, 232, 0.22);
-      animation: bob 2.8s ease-in-out infinite;
+      box-shadow: 0 0 22px rgba(0, 200, 255, 0.35), 0 12px 24px rgba(0, 169, 232, 0.2);
+      animation: bob 2.7s ease-in-out infinite, pinSpark 2.2s ease-in-out infinite;
     }
 
     .weather-grid {
@@ -220,16 +304,16 @@
     }
 
     .temperature strong {
-      font-size: clamp(5.8rem, 20vw, 10.5rem);
+      font-size: clamp(5.9rem, 20vw, 10.8rem);
       line-height: 0.84;
       letter-spacing: 0;
-      background: linear-gradient(120deg, #182033 5%, #4568ff 38%, #ff62b2 72%, #ffc94b 100%);
-      background-size: 180% 180%;
+      background: linear-gradient(120deg, #182033 0%, #4568ff 24%, #ff55c7 52%, #ffd44a 76%, #00c8ff 100%);
+      background-size: 260% 260%;
       background-clip: text;
       -webkit-background-clip: text;
       color: transparent;
-      animation: tempGlow 4.4s ease-in-out infinite;
-      filter: drop-shadow(0 16px 22px rgba(69, 104, 255, 0.14));
+      animation: tempGlow 3.2s ease-in-out infinite;
+      filter: drop-shadow(0 0 18px rgba(255,255,255,0.75)) drop-shadow(0 18px 22px rgba(69, 104, 255, 0.16));
     }
 
     .temperature span {
@@ -243,20 +327,22 @@
       display: grid;
       justify-items: center;
       gap: 10px;
-      min-width: 156px;
+      min-width: 164px;
       padding: 18px;
-      border: 1px solid rgba(255,255,255,0.78);
+      border: 1px solid rgba(255,255,255,0.86);
       border-radius: 8px;
-      background: linear-gradient(150deg, rgba(255,255,255,0.82), rgba(255,255,255,0.44));
-      box-shadow: 0 18px 36px rgba(69,104,255,0.13), inset 0 1px 0 rgba(255,255,255,0.9);
-      animation: floatCard 4s ease-in-out infinite, riseIn 760ms 230ms ease both;
+      background:
+        linear-gradient(150deg, rgba(255,255,255,0.9), rgba(255,255,255,0.44)),
+        radial-gradient(circle at 25% 20%, rgba(255,212,74,0.24), transparent 42%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.35), 0 22px 46px rgba(69,104,255,0.16), inset 0 1px 0 rgba(255,255,255,0.95);
+      animation: floatCard 3.5s ease-in-out infinite, riseIn 760ms 230ms ease both, cardGlow 2.8s ease-in-out infinite;
     }
 
     .emoji {
-      font-size: clamp(4.5rem, 12vw, 7rem);
+      font-size: clamp(4.7rem, 12vw, 7.2rem);
       line-height: 1;
-      filter: drop-shadow(0 14px 18px rgba(255, 174, 66, 0.24));
-      animation: emojiDance 2.8s ease-in-out infinite;
+      filter: drop-shadow(0 0 18px rgba(255, 212, 74, 0.72)) drop-shadow(0 14px 18px rgba(255, 85, 199, 0.2));
+      animation: emojiDance 2.4s ease-in-out infinite;
     }
 
     .condition-name {
@@ -275,12 +361,21 @@
     .metric {
       position: relative;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.62);
+      border: 1px solid rgba(255,255,255,0.74);
       border-radius: 8px;
       padding: 14px;
       min-width: 0;
-      background: rgba(255,255,255,0.46);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.54);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 14px 30px rgba(69,104,255,0.08);
+    }
+
+    .metric::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 0 36%, rgba(255,255,255,0.58) 48%, transparent 62% 100%);
+      transform: translateX(-120%);
+      animation: miniSweep 3.6s ease-in-out infinite;
     }
 
     .metric::after {
@@ -289,8 +384,14 @@
       inset: auto 12px 0;
       height: 3px;
       border-radius: 999px;
-      background: linear-gradient(90deg, var(--cyan), var(--pink), var(--gold));
-      animation: pulseLine 2.2s ease-in-out infinite;
+      background: linear-gradient(90deg, var(--cyan), var(--pink), var(--gold), var(--green));
+      animation: pulseLine 1.8s ease-in-out infinite;
+    }
+
+    .metric span,
+    .metric strong {
+      position: relative;
+      z-index: 1;
     }
 
     .metric span {
@@ -312,10 +413,10 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
       padding: 8px;
-      border: 1px solid rgba(255,255,255,0.72);
+      border: 1px solid rgba(255,255,255,0.78);
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.48);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.86);
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 16px 40px rgba(69,104,255,0.08);
       animation: riseIn 900ms 420ms ease both;
     }
 
@@ -332,9 +433,10 @@
     }
 
     button:hover {
-      background: rgba(255, 255, 255, 0.72);
+      background: rgba(255, 255, 255, 0.78);
       color: var(--blue);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 0 24px rgba(255,255,255,0.9);
     }
 
     button:focus-visible {
@@ -343,10 +445,11 @@
     }
 
     button[aria-pressed="true"] {
-      background: linear-gradient(135deg, var(--blue), var(--cyan) 52%, var(--pink));
+      background: linear-gradient(135deg, var(--blue), var(--cyan) 36%, var(--pink) 70%, var(--gold));
+      background-size: 220% 220%;
       color: #ffffff;
-      box-shadow: 0 16px 32px rgba(69, 104, 255, 0.32);
-      animation: selectedPulse 2.7s ease-in-out infinite;
+      box-shadow: 0 0 28px rgba(0,200,255,0.35), 0 20px 42px rgba(255, 85, 199, 0.28);
+      animation: selectedPulse 2.1s ease-in-out infinite, buttonShimmer 3.2s linear infinite;
     }
 
     button:active {
@@ -357,7 +460,7 @@
       min-height: 28px;
       color: var(--muted);
       font-size: 0.94rem;
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.6;
       animation: fadeIn 400ms ease both;
     }
@@ -366,7 +469,7 @@
     .skeleton .condition,
     .skeleton .metric strong {
       color: transparent;
-      background: linear-gradient(90deg, rgba(255,255,255,0.28), rgba(255,255,255,0.92), rgba(255,255,255,0.28));
+      background: linear-gradient(90deg, rgba(255,255,255,0.3), rgba(255,255,255,0.96), rgba(255,255,255,0.3));
       background-size: 240% 100%;
       animation: shine 1.1s ease-in-out infinite;
     }
@@ -379,14 +482,36 @@
       to { transform: rotate(360deg); }
     }
 
+    @keyframes starDrift {
+      to { transform: translate3d(90px, 70px, 0); }
+    }
+
+    @keyframes borderFlow {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
     @keyframes sweep {
-      0%, 42% { transform: skewX(-18deg) translateX(-155%); }
-      68%, 100% { transform: skewX(-18deg) translateX(255%); }
+      0%, 35% { transform: skewX(-18deg) translateX(-160%); }
+      62%, 100% { transform: skewX(-18deg) translateX(260%); }
     }
 
     @keyframes twinkle {
-      0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
-      38%, 58% { opacity: 0.92; transform: scale(1.35) rotate(180deg); }
+      0%, 100% { opacity: 0; transform: scale(0.35) rotate(0deg); }
+      32% { opacity: 0.72; transform: scale(1.15) rotate(120deg); }
+      52% { opacity: 1; transform: scale(1.55) rotate(220deg); }
+      72% { opacity: 0.58; transform: scale(0.95) rotate(300deg); }
+    }
+
+    @keyframes shoot {
+      0%, 68% { opacity: 0; transform: rotate(-24deg) translateX(-180px); }
+      76% { opacity: 0.96; }
+      100% { opacity: 0; transform: rotate(-24deg) translateX(760px); }
+    }
+
+    @keyframes ringFloat {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(0.88); opacity: 0.18; }
+      50% { transform: translate3d(18px, -24px, 0) scale(1.12); opacity: 0.42; }
     }
 
     @keyframes riseIn {
@@ -396,7 +521,12 @@
 
     @keyframes bob {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-7px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes pinSpark {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.18); }
     }
 
     @keyframes tempGlow {
@@ -405,23 +535,42 @@
     }
 
     @keyframes emojiDance {
-      0%, 100% { transform: rotate(-3deg) scale(1); }
-      50% { transform: rotate(4deg) scale(1.08); }
+      0%, 100% { transform: rotate(-4deg) scale(1); }
+      50% { transform: rotate(5deg) scale(1.1); }
     }
 
     @keyframes floatCard {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-9px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes cardGlow {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.35), 0 22px 46px rgba(69,104,255,0.16); }
+      50% { box-shadow: 0 0 24px rgba(255,212,74,0.42), 0 24px 50px rgba(255,85,199,0.2); }
+    }
+
+    @keyframes miniSweep {
+      0%, 48% { transform: translateX(-120%); }
+      78%, 100% { transform: translateX(120%); }
     }
 
     @keyframes pulseLine {
-      0%, 100% { opacity: 0.45; transform: scaleX(0.72); }
+      0%, 100% { opacity: 0.46; transform: scaleX(0.7); }
       50% { opacity: 1; transform: scaleX(1); }
     }
 
     @keyframes selectedPulse {
-      0%, 100% { box-shadow: 0 16px 32px rgba(69, 104, 255, 0.32); }
-      50% { box-shadow: 0 20px 42px rgba(255, 98, 178, 0.34); }
+      0%, 100% { box-shadow: 0 0 28px rgba(0,200,255,0.35), 0 20px 42px rgba(255, 85, 199, 0.28); }
+      50% { box-shadow: 0 0 34px rgba(255,212,74,0.55), 0 24px 52px rgba(69, 104, 255, 0.32); }
+    }
+
+    @keyframes buttonShimmer {
+      to { background-position: 200% 50%; }
+    }
+
+    @keyframes statusGlow {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.4), 0 14px 32px rgba(69,104,255,0.16); }
+      50% { box-shadow: 0 0 26px rgba(255,255,255,0.85), 0 18px 42px rgba(255,85,199,0.16); }
     }
 
     @keyframes fadeIn {
@@ -495,7 +644,11 @@
 <body>
   <main>
     <section class="app" aria-label="今日の天気">
+      <div class="rainbow-border" aria-hidden="true"></div>
       <div class="sparkles" aria-hidden="true"></div>
+      <div class="shooting-stars" aria-hidden="true"></div>
+      <div class="glow-rings" aria-hidden="true"></div>
+
       <div class="content" id="app">
         <header>
           <div>
@@ -606,6 +759,8 @@
     const elements = {
       app: document.querySelector("#app"),
       sparkles: document.querySelector(".sparkles"),
+      shootingStars: document.querySelector(".shooting-stars"),
+      glowRings: document.querySelector(".glow-rings"),
       status: document.querySelector("#status"),
       cityName: document.querySelector("#cityName"),
       temperature: document.querySelector("#temperature"),
@@ -621,23 +776,50 @@
     let activeRequest = null;
     let currentTemperature = 0;
 
-    function buildSparkles() {
-      const colors = ["#ffc94b", "#ff62b2", "#00a9e8", "#ffffff", "#21c997"];
-      const fragment = document.createDocumentFragment();
+    function buildEffects() {
+      const colors = ["#ffd44a", "#ff55c7", "#00c8ff", "#ffffff", "#2ee6a6", "#8b5cff"];
+      const sparkleFragment = document.createDocumentFragment();
+      const shootingFragment = document.createDocumentFragment();
+      const ringFragment = document.createDocumentFragment();
 
-      for (let i = 0; i < 34; i += 1) {
+      for (let i = 0; i < 70; i += 1) {
         const sparkle = document.createElement("span");
         sparkle.className = "sparkle";
         sparkle.style.setProperty("--x", `${Math.random() * 100}%`);
         sparkle.style.setProperty("--y", `${Math.random() * 100}%`);
-        sparkle.style.setProperty("--size", `${6 + Math.random() * 14}px`);
-        sparkle.style.setProperty("--dur", `${2.4 + Math.random() * 3.8}s`);
-        sparkle.style.setProperty("--delay", `${Math.random() * 3.4}s`);
+        sparkle.style.setProperty("--size", `${7 + Math.random() * 17}px`);
+        sparkle.style.setProperty("--dur", `${1.8 + Math.random() * 3.6}s`);
+        sparkle.style.setProperty("--delay", `${Math.random() * 3.8}s`);
         sparkle.style.setProperty("--color", colors[i % colors.length]);
-        fragment.appendChild(sparkle);
+        sparkleFragment.appendChild(sparkle);
       }
 
-      elements.sparkles.appendChild(fragment);
+      for (let i = 0; i < 7; i += 1) {
+        const star = document.createElement("span");
+        star.className = "shooting-star";
+        star.style.setProperty("--x", `${-12 + Math.random() * 52}%`);
+        star.style.setProperty("--y", `${6 + Math.random() * 68}%`);
+        star.style.setProperty("--dur", `${5.2 + Math.random() * 5.4}s`);
+        star.style.setProperty("--delay", `${1.2 + i * 1.7}s`);
+        star.style.setProperty("--color", colors[(i + 2) % colors.length]);
+        shootingFragment.appendChild(star);
+      }
+
+      for (let i = 0; i < 8; i += 1) {
+        const ring = document.createElement("span");
+        ring.className = "glow-ring";
+        ring.style.setProperty("--x", `${Math.random() * 92}%`);
+        ring.style.setProperty("--y", `${Math.random() * 86}%`);
+        ring.style.setProperty("--size", `${48 + Math.random() * 90}px`);
+        ring.style.setProperty("--dur", `${4.4 + Math.random() * 4.8}s`);
+        ring.style.setProperty("--delay", `${Math.random() * 4}s`);
+        ring.style.setProperty("--color", colors[(i + 1) % colors.length]);
+        ringFragment.appendChild(ring);
+      }
+
+      elements.sparkles.appendChild(sparkleFragment);
+      elements.shootingStars.appendChild(shootingFragment);
+      elements.glowRings.appendChild(ringFragment);
     }
 
     function getWeatherLabel(code) {
@@ -760,15 +942,6 @@
         const data = await response.json();
         renderWeather(city, data.current, "live");
       } catch (error) {
-        if (error.name === "AbortError" && activeRequest.signal.aborted) {
-          renderWeather(city, {
-            temperature_2m: city.fallback.temperature,
-            weather_code: city.fallback.code,
-            time: city.fallback.time
-          }, "demo");
-          return;
-        }
-
         renderWeather(city, {
           temperature_2m: city.fallback.temperature,
           weather_code: city.fallback.code,
@@ -783,9 +956,8 @@
       button.addEventListener("click", () => loadWeather(button.dataset.city));
     });
 
-    buildSparkles();
+    buildEffects();
     loadWeather("takamatsu");
   </script>
 </body>
 </html>
-
