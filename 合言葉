@@ -1,0 +1,12 @@
+OTENKI encrypted passphrase file
+
+plaintext: encrypted
+algorithm: AES-256-CBC
+kdf: PBKDF2-HMAC-SHA256
+iterations: 250000
+salt: aikotoba-file-v1
+iv_base64: T1RFTktJMjAyNjA3MDcwNA==
+ciphertext_base64: KuqCWFYJoN+Y656nasYknw==
+
+decryption note:
+The shared key phrase is not stored in this file.
