@@ -1101,7 +1101,7 @@
         <header>
           <div>
             <h1>今日の天気</h1>
-            <p class="subtitle">通常モードは誰でも見られます。合言葉で好きな場所検索が開きます。</p>
+            <p class="subtitle">通常モードは誰でも見られます。合言葉で好きな場所検索と空ウォッチが開きます。</p>
           </div>
           <div class="status" id="status" aria-live="polite">取得中</div>
         </header>
@@ -1173,7 +1173,7 @@
         </nav>
 
         <section class="secret-panel" aria-label="合言葉エリア">
-          <div class="secret-copy">合言葉を入れると、都市名や地名を指定して天気と湿度を見られます。</div>
+          <div class="secret-copy">合言葉を入れると、都市名や地名を指定した天気検索と、カメラで雲を読む空ウォッチが使えます。</div>
           <form class="secret-form" id="secretForm" autocomplete="off">
             <input id="passphrase" name="passphrase" type="password" placeholder="合言葉" autocomplete="current-password">
             <button class="primary-button" type="submit">拡張モードを開く</button>
@@ -2084,7 +2084,7 @@
       sessionStorage.setItem("otenki-advanced", "yes");
       elements.advanced.classList.add("unlocked");
       elements.secretFeedback.classList.remove("error");
-      elements.secretFeedback.textContent = "拡張モードを開きました。好きな場所を検索できます。";
+      elements.secretFeedback.textContent = "拡張モードを開きました。好きな場所の検索と空ウォッチが使えます。";
       elements.passphrase.value = "";
       elements.placeSearch.focus();
     }
@@ -2140,7 +2140,7 @@
 
     if (advancedUnlocked) {
       elements.advanced.classList.add("unlocked");
-      elements.secretFeedback.textContent = "拡張モードが開いています。";
+      elements.secretFeedback.textContent = "拡張モードが開いています。好きな場所検索と空ウォッチが使えます。";
     }
 
     fetchWeatherFor(cities.takamatsu, "takamatsu");
