@@ -1788,6 +1788,22 @@
       const rainy = Number.isFinite(rainChance) && rainChance >= 55;
       const brightTexture = stats.brightnessVariance > 260;
 
+      if (stats.skyCoverage > 0.70 && stats.blueRatio < 0.10 && cloudCover > 0.78) {
+        if ((stats.grayRatio > 0.34 || stats.darkRatio > 0.14) && (humid || rainy || stats.averageBrightness < 142)) {
+          return {
+            key: "overcast-rainy",
+            name: "一面の灰色雲",
+            detail: "詳しい候補: 乱層雲、高層雲、層雲",
+            note: "空全体を覆う雲。小雨や雨の前後に出やすいです。"
+          };
+        }
+        return {
+          key: "overcast",
+          name: "曇天・一面の雲",
+          detail: "詳しい候補: 高層雲、層雲、層積雲",
+          note: "空を広く覆う雲。青空が少ない曇り空です。"
+        };
+      }
       if (stats.darkRatio > 0.34 && stats.blueRatio < 0.14 && stats.averageBrightness < 105) {
         return {
           key: "cumulonimbus",
@@ -1873,17 +1889,25 @@
       const g = data[index + 1];
       const b = data[index + 2];
       const brightness = (r + g + b) / 3;
-      const spread = Math.max(r, g, b) - Math.min(r, g, b);
+      const maxChannel = Math.max(r, g, b);
+      const minChannel = Math.min(r, g, b);
+      const spread = maxChannel - minChannel;
+      const saturation = maxChannel === 0 ? 0 : spread / maxChannel;
       const blueDominance = b - Math.max(r, g);
-      const isBlueSky = b > r + 18 && b > g + 6 && brightness > 90;
-      const isWhiteCloud = brightness > 154 && spread < 78 && blueDominance < 42;
-      const isGrayCloud = brightness > 112 && brightness <= 172 && spread < 48 && blueDominance < 18;
-      const isDarkCloud = brightness > 58 && brightness <= 112 && spread < 42;
-      const isGreenObject = g > r + 18 && g > b + 14 && brightness > 50 && brightness < 195;
-      const isEarthObject = r > b + 22 && g > b + 10 && brightness > 55 && brightness < 190 && spread > 24;
+      const redDominance = r - Math.max(g, b);
+      const warmBias = r - b;
+      const neutralTone = saturation < 0.30 && Math.abs(r - g) < 34 && Math.abs(g - b) < 42;
+      const coolNeutralTone = neutralTone && b >= r - 16 && g >= r - 24;
+      const isBlueSky = b > r + 12 && b >= g - 4 && brightness > 82 && saturation > 0.10;
+      const isWhiteCloud = brightness > 148 && coolNeutralTone && warmBias < 34;
+      const isGrayCloud = brightness > 96 && brightness <= 172 && coolNeutralTone && blueDominance < 28 && redDominance < 26;
+      const isDarkCloud = brightness > 58 && brightness <= 112 && saturation < 0.24 && warmBias < 24;
+      const isGreenObject = g > r + 18 && g > b + 14 && brightness > 50 && brightness < 205;
+      const isEarthObject = r > b + 22 && g > b + 10 && brightness > 55 && brightness < 205 && spread > 24;
       const isVeryDarkObject = brightness <= 58;
-      const isSaturatedObject = spread > 94 && brightness < 210 && !isBlueSky;
-      const isObjectLike = isGreenObject || isEarthObject || isVeryDarkObject || isSaturatedObject;
+      const isSaturatedObject = saturation > 0.46 && brightness < 220 && !isBlueSky;
+      const isIndoorWarmObject = warmBias > 38 && brightness > 95 && saturation > 0.16;
+      const isObjectLike = isGreenObject || isEarthObject || isVeryDarkObject || isSaturatedObject || isIndoorWarmObject;
       const isSkyCandidate = !isObjectLike && (isBlueSky || isWhiteCloud || isGrayCloud || isDarkCloud);
 
       return {
@@ -1894,6 +1918,7 @@
         isDarkCloud,
         isGreenObject,
         isEarthObject,
+        isIndoorWarmObject,
         isVeryDarkObject,
         isSaturatedObject,
         isSkyCandidate
@@ -1915,7 +1940,7 @@
         profiles[pixel] = profile;
         candidates[pixel] = profile.isSkyCandidate ? 1 : 0;
         if (profile.isGreenObject) green += 1;
-        if (profile.isEarthObject) earth += 1;
+        if (profile.isEarthObject || profile.isIndoorWarmObject) earth += 1;
         if (profile.isSaturatedObject) saturated += 1;
         if (profile.isVeryDarkObject) veryDark += 1;
       }
@@ -2030,6 +2055,14 @@
       const cloudSignal = stats.whiteRatio + stats.grayRatio + stats.darkRatio;
       const skySignal = stats.blueRatio + cloudSignal;
       const objectSignal = stats.greenRatio + stats.earthRatio + stats.saturatedRatio + stats.veryDarkRatio;
+      const rainChance = getSelectedRainChance();
+      const humid = Number.isFinite(currentWeatherContext.humidity) && currentWeatherContext.humidity >= 72;
+      const rainy = Number.isFinite(rainChance) && rainChance >= 35;
+      const weatherSoundsCloudy = /くもり|曇|雨|霧|雪/.test(currentWeatherContext.label || "");
+      const overcastLike = stats.skyCoverage > 0.55
+        && cloudSignal > 0.66
+        && stats.blueRatio < 0.12
+        && (stats.grayRatio + stats.darkRatio > 0.18 || humid || rainy || weatherSoundsCloudy || stats.brightnessVariance >= 18);
 
       if (stats.skyCoverage < 0.18 || skySignal < 0.18) {
         return {
@@ -2042,6 +2075,9 @@
           title: "空以外が多そうです",
           body: "木・建物・室内・影っぽい色が多めです。空ウォッチは、画面の7割くらいを空にするとかなり読みやすくなります。"
         };
+      }
+      if (overcastLike) {
+        return null;
       }
       if (stats.skyCoverage > 0.70 && stats.blueRatio < 0.03 && stats.brightnessVariance < 45) {
         return {
