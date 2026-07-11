@@ -1630,21 +1630,24 @@
         : "風向きはまだ取得中";
 
       if (cloudType.key === "cumulonimbus" || ((wet || rainy || lowPressure) && stats.darkRatio > 0.16)) {
-        return `${windText}。湿度や降水確率も高めなら、にわか雨や雷雨に変わる可能性があります。暗い雲が近づく向きと風向きが合っているなら、短時間で天気が崩れるサインかもしれません。`;
+        return `${windText}。雨に変わるサインかも。`;
       }
       if (cloudType.key === "stratus" || cloudType.key === "altostratus") {
-        return `${windText}。雲が広くのっぺりしていて、湿度が高い場合は、このあと日差しが弱くなったり小雨寄りに進むことがあります。風が強い日は雲の流れが速く、回復も変化も早めです。`;
+        return `${windText}。日差しは弱め、変化はゆっくり。`;
       }
       if (cloudType.key === "cumulus") {
-        return `${windText}。もこもこ雲が増えて上に育っていくなら午後に雨雲化することがあります。平たく小さいまま流れているなら、しばらくは晴れ間が残りやすいです。`;
+        return `${windText}。育つとにわか雨、低いままなら晴れ間あり。`;
+      }
+      if (cloudType.key === "white-cloud") {
+        return `${windText}。白雲中心で、すぐ大雨の感じは弱め。`;
       }
       if (cloudType.key === "cirrus") {
-        return `${windText}。薄い高い雲が増えてくる時は、すぐ雨ではなくても天気の変わり目の前ぶれになることがあります。`;
+        return `${windText}。天気の変わり目の前ぶれかも。`;
       }
       if (windy) {
-        return `${windText}。青空多めですが風があるので、遠くの雲が流れ込むと変化は早めです。`;
+        return `${windText}。雲の流れは早め。`;
       }
-      return `${windText}。雲が少なめなら、しばらく大きく崩れにくい空に見えます。`;
+      return `${windText}。大きく崩れにくい空に見えます。`;
     }
 
     async function startSkyCamera() {
@@ -1699,28 +1702,35 @@
         return {
           key: "nimbostratus",
           name: "厚い灰色雲寄り",
-          note: "灰色から暗めの雲が目立ちます。空が低く重く見える時は、雨の前後や湿った空気が入っている時に出やすいです。"
+          note: "低く重い雲。雨の前後に出やすいです。"
         };
       }
       if (cloudCover > 0.70 && stats.grayRatio > stats.whiteRatio * 0.8) {
         return {
           key: "stratus",
           name: "層雲・高層雲寄り",
-          note: "空を広く覆う雲っぽいです。天気がゆっくり下り坂の時や、日差しが弱い時に出やすい雰囲気です。"
+          note: "空を広く覆う雲。日差しが弱めです。"
         };
       }
-      if (stats.whiteRatio > 0.18 && stats.blueRatio > 0.16 && stats.darkRatio < 0.22) {
+      if (stats.whiteRatio > 0.34 && stats.grayRatio < 0.25 && stats.darkRatio < 0.16) {
+        return {
+          key: "white-cloud",
+          name: "白い雲多め",
+          note: "白く明るい雲を検出。積雲や薄い雲の可能性があります。"
+        };
+      }
+      if (stats.whiteRatio > 0.14 && stats.blueRatio > 0.10 && stats.darkRatio < 0.22) {
         return {
           key: "cumulus",
           name: "積雲寄り",
-          note: "白くもこもこした雲が混じっていそうです。地面が温まって空気が上に持ち上がる時によく見えます。"
+          note: "白くもこもこした雲。午後に育つことがあります。"
         };
       }
-      if (cloudCover > 0.14 && stats.averageBrightness > 145 && stats.darkRatio < 0.16) {
+      if (cloudCover > 0.10 && stats.averageBrightness > 135 && stats.darkRatio < 0.16) {
         return {
           key: "cirrus",
           name: "薄雲・巻雲寄り",
-          note: "薄く明るい雲が少しある空っぽいです。高い空の湿り気や、天気の変わり目のサインになることがあります。"
+          note: "薄く明るい雲。天気の変わり目に出ることも。"
         };
       }
       if (stats.darkRatio > 0.36 && stats.blueRatio < 0.1 && stats.grayRatio < 0.18) {
@@ -1733,7 +1743,7 @@
       return {
         key: "clear",
         name: "青空多め",
-        note: "雲は少なめに見えます。空気が比較的乾いている時や、雲を作る上昇気流が弱い時にこんな空になりやすいです。"
+        note: "雲は少なめ。晴れ寄りの空です。"
       };
     }
 
@@ -1745,7 +1755,7 @@
       const spread = Math.max(r, g, b) - Math.min(r, g, b);
       const blueDominance = b - Math.max(r, g);
       const isBlueSky = b > r + 18 && b > g + 6 && brightness > 90;
-      const isWhiteCloud = brightness > 172 && spread < 62;
+      const isWhiteCloud = brightness > 154 && spread < 78 && blueDominance < 42;
       const isGrayCloud = brightness > 112 && brightness <= 172 && spread < 48 && blueDominance < 18;
       const isDarkCloud = brightness > 58 && brightness <= 112 && spread < 42;
       const isGreenObject = g > r + 18 && g > b + 14 && brightness > 50 && brightness < 195;
@@ -1877,7 +1887,7 @@
           body: "木・建物・室内・影っぽい色が多めです。空ウォッチは、画面の7割くらいを空にするとかなり読みやすくなります。"
         };
       }
-      if (stats.skyCoverage > 0.70 && stats.blueRatio < 0.03 && stats.brightnessVariance < 85) {
+      if (stats.skyCoverage > 0.70 && stats.blueRatio < 0.03 && stats.brightnessVariance < 45) {
         return {
           title: "空か壁か迷っています",
           body: "画面がかなり均一な白や灰色です。曇り空にも見えますが、壁や天井も似た写り方になります。屋外の明るさや雲の境目が入る角度で試してください。"
@@ -1918,15 +1928,15 @@
       const cloudType = classifyCloud(stats);
       const humidity = currentWeatherContext.humidity;
       const rainChance = getSelectedRainChance();
-      const humidityText = Number.isFinite(humidity) ? `今の湿度は${Math.round(humidity)}%` : "湿度データはまだ取得中";
-      const rainText = rainChance !== null ? `選択日の最大降水確率は${rainChance}%` : "降水確率はまだ取得中";
+      const humidityText = Number.isFinite(humidity) ? `湿度 ${Math.round(humidity)}%` : "湿度 --";
+      const rainText = rainChance !== null ? `降水 ${rainChance}%` : "降水 --";
       const windText = Number.isFinite(currentWeatherContext.windSpeed)
-        ? `風は${windDirectionLabel(currentWeatherContext.windDirection)}から約${Math.round(currentWeatherContext.windSpeed)}km/h`
-        : "風向きはまだ取得中";
-      const coverText = `検出した空 ${Math.round(stats.skyCoverage * 100)}% / 白雲 ${Math.round(stats.whiteRatio * 100)}% / 灰色雲 ${Math.round(stats.grayRatio * 100)}% / 暗い雲 ${Math.round(stats.darkRatio * 100)}% / 青空 ${Math.round(stats.blueRatio * 100)}%`;
+        ? `風 ${windDirectionLabel(currentWeatherContext.windDirection)} ${Math.round(currentWeatherContext.windSpeed)}km/h`
+        : "風 --";
+      const coverText = `空 ${Math.round(stats.skyCoverage * 100)}% / 白 ${Math.round(stats.whiteRatio * 100)}% / 灰 ${Math.round(stats.grayRatio * 100)}% / 暗 ${Math.round(stats.darkRatio * 100)}% / 青 ${Math.round(stats.blueRatio * 100)}%`;
       const trendText = describeSkyTrend(cloudType, stats);
 
-      elements.skyResult.innerHTML = `<strong>${cloudType.name}</strong>${coverText}<br>${humidityText}、${rainText}、${windText}です。${cloudType.note}<br>${trendText}<br>これはカメラ画像からの簡易推定なので、雲の名前は目安として楽しんでください。`;
+      elements.skyResult.innerHTML = `<strong>${cloudType.name}</strong>${coverText}<br>${humidityText} / ${rainText} / ${windText}<br>${cloudType.note}<br>${trendText}`;
     }
 
     function useCurrentLocationWeather() {
