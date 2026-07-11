@@ -871,7 +871,7 @@
 
     .sky-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
     }
 
@@ -1177,6 +1177,7 @@
             <div class="sky-actions">
               <button class="primary-button" type="button" id="startSkyCamera">カメラ開始</button>
               <button class="primary-button" type="button" id="analyzeSky">雲を見てみる</button>
+              <button class="primary-button" type="button" id="useCurrentLocation">現在地で見る</button>
             </div>
             <div class="sky-result" id="skyResult">まだ解析していません。空が画面に大きく入るようにしてから押してください。</div>
           </section>
@@ -1282,6 +1283,7 @@
       skyCanvas: document.querySelector("#skyCanvas"),
       startSkyCamera: document.querySelector("#startSkyCamera"),
       analyzeSky: document.querySelector("#analyzeSky"),
+      useCurrentLocation: document.querySelector("#useCurrentLocation"),
       skyResult: document.querySelector("#skyResult"),
       buttons: document.querySelectorAll("[data-city]"),
       secretForm: document.querySelector("#secretForm"),
@@ -1300,7 +1302,7 @@
     let activeHourlyForecast = null;
     const lightweightMode = window.matchMedia("(max-width: 720px), (prefers-reduced-motion: reduce)").matches;
     let skyStream = null;
-    let currentWeatherContext = { humidity: null, label: "", rain: null, cityName: "" };
+    let currentWeatherContext = { humidity: null, label: "", rain: null, cityName: "", windSpeed: null, windDirection: null, pressure: null };
 
     const passConfig = {
       salt: "OTENKI:v2:advanced-weather",
@@ -1607,6 +1609,44 @@
       return Number.isFinite(Number(value)) ? Math.round(Number(value)) : null;
     }
 
+    function windDirectionLabel(degrees) {
+      if (!Number.isFinite(Number(degrees))) return "不明";
+      const labels = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
+      return labels[Math.round(Number(degrees) / 45) % 8];
+    }
+
+    function describeSkyTrend(cloudType, stats) {
+      const humidity = currentWeatherContext.humidity;
+      const rainChance = getSelectedRainChance();
+      const windSpeed = currentWeatherContext.windSpeed;
+      const windDirection = currentWeatherContext.windDirection;
+      const pressure = currentWeatherContext.pressure;
+      const wet = Number.isFinite(humidity) && humidity >= 75;
+      const rainy = Number.isFinite(rainChance) && rainChance >= 55;
+      const windy = Number.isFinite(windSpeed) && windSpeed >= 7;
+      const lowPressure = Number.isFinite(pressure) && pressure < 1008;
+      const windText = Number.isFinite(windSpeed)
+        ? `風は${windDirectionLabel(windDirection)}から約${Math.round(windSpeed)}km/h`
+        : "風向きはまだ取得中";
+
+      if (cloudType.key === "cumulonimbus" || ((wet || rainy || lowPressure) && stats.darkRatio > 0.16)) {
+        return `${windText}。湿度や降水確率も高めなら、にわか雨や雷雨に変わる可能性があります。暗い雲が近づく向きと風向きが合っているなら、短時間で天気が崩れるサインかもしれません。`;
+      }
+      if (cloudType.key === "stratus" || cloudType.key === "altostratus") {
+        return `${windText}。雲が広くのっぺりしていて、湿度が高い場合は、このあと日差しが弱くなったり小雨寄りに進むことがあります。風が強い日は雲の流れが速く、回復も変化も早めです。`;
+      }
+      if (cloudType.key === "cumulus") {
+        return `${windText}。もこもこ雲が増えて上に育っていくなら午後に雨雲化することがあります。平たく小さいまま流れているなら、しばらくは晴れ間が残りやすいです。`;
+      }
+      if (cloudType.key === "cirrus") {
+        return `${windText}。薄い高い雲が増えてくる時は、すぐ雨ではなくても天気の変わり目の前ぶれになることがあります。`;
+      }
+      if (windy) {
+        return `${windText}。青空多めですが風があるので、遠くの雲が流れ込むと変化は早めです。`;
+      }
+      return `${windText}。雲が少なめなら、しばらく大きく崩れにくい空に見えます。`;
+    }
+
     async function startSkyCamera() {
       if (!navigator.mediaDevices?.getUserMedia) {
         elements.skyResult.innerHTML = "<strong>カメラが使えません</strong>このブラウザではカメラ機能に対応していないようです。";
@@ -1630,32 +1670,55 @@
     }
 
     function classifyCloud(stats) {
-      const cloudCover = stats.cloudRatio + stats.darkRatio;
-      if (stats.darkRatio > 0.22 || stats.averageBrightness < 118) {
+      const cloudCover = stats.whiteRatio + stats.grayRatio + stats.darkRatio;
+      const rainChance = getSelectedRainChance();
+      const humid = Number.isFinite(currentWeatherContext.humidity) && currentWeatherContext.humidity >= 78;
+      const rainy = Number.isFinite(rainChance) && rainChance >= 55;
+
+      if (stats.darkRatio > 0.34 && stats.blueRatio < 0.14 && stats.averageBrightness < 105) {
         return {
+          key: "cumulonimbus",
           name: "雨雲・積乱雲寄り",
           note: "暗く厚い雲が多めです。上昇気流が強い時や、雨が近い時に見えやすいタイプです。"
         };
       }
-      if (cloudCover > 0.72) {
+      if ((stats.darkRatio > 0.18 && stats.grayRatio > 0.22 && (humid || rainy)) || (stats.darkRatio > 0.26 && stats.blueRatio < 0.2)) {
         return {
+          key: "nimbostratus",
+          name: "厚い灰色雲寄り",
+          note: "灰色から暗めの雲が目立ちます。空が低く重く見える時は、雨の前後や湿った空気が入っている時に出やすいです。"
+        };
+      }
+      if (cloudCover > 0.70 && stats.grayRatio > stats.whiteRatio * 0.8) {
+        return {
+          key: "stratus",
           name: "層雲・高層雲寄り",
           note: "空を広く覆う雲っぽいです。天気がゆっくり下り坂の時や、日差しが弱い時に出やすい雰囲気です。"
         };
       }
-      if (cloudCover > 0.36) {
+      if (stats.whiteRatio > 0.18 && stats.blueRatio > 0.16 && stats.darkRatio < 0.22) {
         return {
+          key: "cumulus",
           name: "積雲寄り",
           note: "白くもこもこした雲が混じっていそうです。地面が温まって空気が上に持ち上がる時によく見えます。"
         };
       }
-      if (cloudCover > 0.12) {
+      if (cloudCover > 0.14 && stats.averageBrightness > 145 && stats.darkRatio < 0.16) {
         return {
+          key: "cirrus",
           name: "薄雲・巻雲寄り",
           note: "薄く明るい雲が少しある空っぽいです。高い空の湿り気や、天気の変わり目のサインになることがあります。"
         };
       }
+      if (stats.darkRatio > 0.36 && stats.blueRatio < 0.1 && stats.grayRatio < 0.18) {
+        return {
+          key: "silhouette",
+          name: "逆光・影が多いかも",
+          note: "暗い部分は多いですが、雲というより建物・木・逆光の影を拾っている可能性があります。空だけが大きく入るようにすると判定しやすくなります。"
+        };
+      }
       return {
+        key: "clear",
         name: "青空多め",
         note: "雲は少なめに見えます。空気が比較的乾いている時や、雲を作る上昇気流が弱い時にこんな空になりやすいです。"
       };
@@ -1672,7 +1735,8 @@
       context.drawImage(elements.skyVideo, 0, 0, canvas.width, canvas.height);
       const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
 
-      let cloud = 0;
+      let white = 0;
+      let gray = 0;
       let dark = 0;
       let blue = 0;
       let brightnessTotal = 0;
@@ -1684,15 +1748,23 @@
         const b = data[i + 2];
         const brightness = (r + g + b) / 3;
         const spread = Math.max(r, g, b) - Math.min(r, g, b);
+        const blueDominance = b - Math.max(r, g);
         brightnessTotal += brightness;
 
-        if (brightness > 145 && spread < 58) cloud += 1;
-        if (brightness < 112 && spread < 70) dark += 1;
-        if (b > r + 18 && b > g + 6 && brightness > 95) blue += 1;
+        if (b > r + 18 && b > g + 6 && brightness > 90) {
+          blue += 1;
+        } else if (brightness > 172 && spread < 62) {
+          white += 1;
+        } else if (brightness > 112 && brightness <= 172 && spread < 48 && blueDominance < 18) {
+          gray += 1;
+        } else if (brightness > 58 && brightness <= 112 && spread < 42) {
+          dark += 1;
+        }
       }
 
       const stats = {
-        cloudRatio: cloud / total,
+        whiteRatio: white / total,
+        grayRatio: gray / total,
         darkRatio: dark / total,
         blueRatio: blue / total,
         averageBrightness: brightnessTotal / total
@@ -1702,9 +1774,37 @@
       const rainChance = getSelectedRainChance();
       const humidityText = Number.isFinite(humidity) ? `今の湿度は${Math.round(humidity)}%` : "湿度データはまだ取得中";
       const rainText = rainChance !== null ? `選択日の最大降水確率は${rainChance}%` : "降水確率はまだ取得中";
-      const coverText = `雲っぽい面積 ${Math.round((stats.cloudRatio + stats.darkRatio) * 100)}% / 青空っぽい面積 ${Math.round(stats.blueRatio * 100)}%`;
+      const windText = Number.isFinite(currentWeatherContext.windSpeed)
+        ? `風は${windDirectionLabel(currentWeatherContext.windDirection)}から約${Math.round(currentWeatherContext.windSpeed)}km/h`
+        : "風向きはまだ取得中";
+      const coverText = `白雲 ${Math.round(stats.whiteRatio * 100)}% / 灰色雲 ${Math.round(stats.grayRatio * 100)}% / 暗い雲 ${Math.round(stats.darkRatio * 100)}% / 青空 ${Math.round(stats.blueRatio * 100)}%`;
+      const trendText = describeSkyTrend(cloudType, stats);
 
-      elements.skyResult.innerHTML = `<strong>${cloudType.name}</strong>${coverText}<br>${humidityText}、${rainText}です。${cloudType.note}<br>これはカメラ画像からの簡易推定なので、雲の名前は目安として楽しんでください。`;
+      elements.skyResult.innerHTML = `<strong>${cloudType.name}</strong>${coverText}<br>${humidityText}、${rainText}、${windText}です。${cloudType.note}<br>${trendText}<br>これはカメラ画像からの簡易推定なので、雲の名前は目安として楽しんでください。`;
+    }
+
+    function useCurrentLocationWeather() {
+      if (!navigator.geolocation) {
+        elements.skyResult.innerHTML = "<strong>現在地が使えません</strong>このブラウザでは位置情報に対応していないようです。";
+        return;
+      }
+
+      elements.skyResult.innerHTML = "<strong>現在地を確認中</strong>許可されたら、その場所の天気と風向きを読み込みます。";
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        fetchWeatherFor({
+          name: "現在地",
+          latitude,
+          longitude,
+          fallback: { temperature: 28, humidity: 65, code: 2, time: "2026-07-11T12:00", windSpeed: 4, windDirection: 180, pressure: 1012 }
+        }, "");
+      }, () => {
+        elements.skyResult.innerHTML = "<strong>現在地を取れませんでした</strong>ブラウザの位置情報許可を確認してください。";
+      }, {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000
+      });
     }
 
     function renderForecastDetail(index) {
@@ -1771,7 +1871,10 @@
         humidity,
         label,
         rain: getSelectedRainChance(),
-        cityName: city.name
+        cityName: city.name,
+        windSpeed: Number(current.wind_speed_10m),
+        windDirection: Number(current.wind_direction_10m),
+        pressure: Number(current.pressure_msl)
       };
 
       elements.app.classList.remove("skeleton");
@@ -1814,7 +1917,7 @@
       const params = new URLSearchParams({
         latitude: city.latitude,
         longitude: city.longitude,
-        current: "temperature_2m,relative_humidity_2m,weather_code",
+        current: "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
         daily: "weather_code,temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_probability_max",
         hourly: "temperature_2m,weather_code,precipitation_probability",
         forecast_days: "7",
@@ -1839,7 +1942,10 @@
           temperature_2m: fallback.temperature,
           relative_humidity_2m: fallback.humidity,
           weather_code: fallback.code,
-          time: fallback.time
+          time: fallback.time,
+          wind_speed_10m: fallback.windSpeed || 4,
+          wind_direction_10m: fallback.windDirection || 180,
+          pressure_msl: fallback.pressure || 1012
         }, buildFallbackDaily(fallback), buildFallbackHourly(fallback), "demo");
       } finally {
         clearTimeout(timeoutId);
@@ -2013,6 +2119,7 @@
 
     elements.startSkyCamera.addEventListener("click", startSkyCamera);
     elements.analyzeSky.addEventListener("click", analyzeSkyFrame);
+    elements.useCurrentLocation.addEventListener("click", useCurrentLocationWeather);
 
     elements.secretForm.addEventListener("submit", handleSecret);
     elements.searchForm.addEventListener("submit", handleSearch);
