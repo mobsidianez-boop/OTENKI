@@ -1787,9 +1787,18 @@
       const humid = Number.isFinite(currentWeatherContext.humidity) && currentWeatherContext.humidity >= 78;
       const rainy = Number.isFinite(rainChance) && rainChance >= 55;
       const brightTexture = stats.brightnessVariance > 260;
+      const objectSignal = stats.greenRatio + stats.earthRatio + stats.saturatedRatio + stats.veryDarkRatio;
+      const broadCloudSheet = stats.skyCoverage > 0.52
+        && stats.blueRatio < 0.22
+        && cloudCover > 0.58
+        && objectSignal < 0.30;
+      const flatOvercast = broadCloudSheet
+        && stats.blueRatio < 0.10
+        && (stats.grayRatio + stats.whiteRatio > 0.56)
+        && stats.brightnessVariance < 420;
 
-      if (stats.skyCoverage > 0.70 && stats.blueRatio < 0.10 && cloudCover > 0.78) {
-        if ((stats.grayRatio > 0.34 || stats.darkRatio > 0.14) && (humid || rainy || stats.averageBrightness < 142)) {
+      if (flatOvercast || (stats.skyCoverage > 0.62 && stats.blueRatio < 0.16 && cloudCover > 0.68)) {
+        if ((stats.grayRatio > 0.26 || stats.darkRatio > 0.10) && (humid || rainy || stats.averageBrightness < 152)) {
           return {
             key: "overcast-rainy",
             name: "一面の灰色雲",
@@ -2060,9 +2069,10 @@
       const rainy = Number.isFinite(rainChance) && rainChance >= 35;
       const weatherSoundsCloudy = /くもり|曇|雨|霧|雪/.test(currentWeatherContext.label || "");
       const overcastLike = stats.skyCoverage > 0.55
-        && cloudSignal > 0.66
-        && stats.blueRatio < 0.12
-        && (stats.grayRatio + stats.darkRatio > 0.18 || humid || rainy || weatherSoundsCloudy || stats.brightnessVariance >= 18);
+        && cloudSignal > 0.52
+        && stats.blueRatio < 0.22
+        && objectSignal < 0.32
+        && (stats.grayRatio + stats.whiteRatio > 0.45 || humid || rainy || weatherSoundsCloudy || stats.brightnessVariance >= 12);
 
       if (stats.skyCoverage < 0.18 || skySignal < 0.18) {
         return {
@@ -2070,7 +2080,7 @@
           body: "上側からつながる空の領域が少ないので、まだ雲として判定しません。スマホを少し上に向けて、空を大きく入れてください。"
         };
       }
-      if (objectSignal > 0.34 && stats.blueRatio < 0.20) {
+      if (objectSignal > 0.34 && stats.blueRatio < 0.20 && !overcastLike) {
         return {
           title: "空以外が多そうです",
           body: "木・建物・室内・影っぽい色が多めです。空ウォッチは、画面の7割くらいを空にするとかなり読みやすくなります。"
@@ -2079,7 +2089,7 @@
       if (overcastLike) {
         return null;
       }
-      if (stats.skyCoverage > 0.70 && stats.blueRatio < 0.03 && stats.brightnessVariance < 45) {
+      if (stats.skyCoverage > 0.70 && stats.blueRatio < 0.03 && stats.brightnessVariance < 20 && !weatherSoundsCloudy && !humid) {
         return {
           title: "空か壁か迷っています",
           body: "画面がかなり均一な白や灰色です。曇り空にも見えますが、壁や天井も似た写り方になります。屋外の明るさや雲の境目が入る角度で試してください。"
@@ -2091,7 +2101,7 @@
           body: "暗い部分が多く、雲というより影や室内を見ている可能性があります。明るい空にカメラを向けてもう一度試してください。"
         };
       }
-      if (stats.blueRatio < 0.04 && cloudSignal > 0.70 && stats.averageBrightness > 118 && stats.saturatedRatio < 0.05) {
+      if (stats.blueRatio < 0.04 && cloudSignal > 0.70 && stats.averageBrightness > 118 && stats.saturatedRatio < 0.05 && stats.brightnessVariance < 20 && !weatherSoundsCloudy && !humid) {
         return {
           title: "空か壁か迷っています",
           body: "白や灰色が画面いっぱいに入っています。曇り空の可能性もありますが、壁や紙も似た色になります。地平線や空の明るさが少し入る角度で試してください。"
