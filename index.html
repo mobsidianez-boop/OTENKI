@@ -1164,23 +1164,6 @@
             </section>
           </section>
 
-          <section class="sky-watch" aria-label="空ウォッチ">
-            <div class="sky-title">
-              <span>空ウォッチ</span>
-              <span>カメラで雲を推定</span>
-            </div>
-            <div class="sky-camera" id="skyCamera">
-              <video id="skyVideo" playsinline muted></video>
-              <div class="sky-placeholder">空にカメラを向けると、雲の量や暗さから「どんな雲っぽいか」をざっくり見ます。</div>
-            </div>
-            <canvas id="skyCanvas" width="96" height="72" hidden></canvas>
-            <div class="sky-actions">
-              <button class="primary-button" type="button" id="startSkyCamera">カメラ開始</button>
-              <button class="primary-button" type="button" id="analyzeSky">雲を見てみる</button>
-              <button class="primary-button" type="button" id="useCurrentLocation">現在地で見る</button>
-            </div>
-            <div class="sky-result" id="skyResult">まだ解析していません。空が画面に大きく入るようにしてから押してください。</div>
-          </section>
         </div>
 
         <nav class="city-tabs" aria-label="都市を切り替え">
@@ -1200,6 +1183,23 @@
               <input id="placeSearch" type="search" placeholder="例: 札幌、京都、New York">
               <button class="primary-button" type="submit">この場所を見る</button>
             </form>
+            <section class="sky-watch" aria-label="空ウォッチ">
+              <div class="sky-title">
+                <span>空ウォッチ</span>
+                <span>カメラで雲を推定</span>
+              </div>
+              <div class="sky-camera" id="skyCamera">
+                <video id="skyVideo" playsinline muted></video>
+                <div class="sky-placeholder">空にカメラを向けると、雲の量や暗さから「どんな雲っぽいか」をざっくり見ます。</div>
+              </div>
+              <canvas id="skyCanvas" width="96" height="72" hidden></canvas>
+              <div class="sky-actions">
+                <button class="primary-button" type="button" id="startSkyCamera">カメラ開始</button>
+                <button class="primary-button" type="button" id="analyzeSky">雲を見てみる</button>
+                <button class="primary-button" type="button" id="useCurrentLocation">現在地で見る</button>
+              </div>
+              <div class="sky-result" id="skyResult">まだ解析していません。空が画面に大きく入るようにしてから押してください。</div>
+            </section>
           </div>
           <div class="secret-feedback" id="secretFeedback" aria-live="polite"></div>
         </section>
@@ -2117,9 +2117,9 @@
       selectForecastDay(Number(button.dataset.forecastIndex));
     });
 
-    elements.startSkyCamera.addEventListener("click", startSkyCamera);
-    elements.analyzeSky.addEventListener("click", analyzeSkyFrame);
-    elements.useCurrentLocation.addEventListener("click", useCurrentLocationWeather);
+    elements.startSkyCamera?.addEventListener("click", startSkyCamera);
+    elements.analyzeSky?.addEventListener("click", analyzeSkyFrame);
+    elements.useCurrentLocation?.addEventListener("click", useCurrentLocationWeather);
 
     elements.secretForm.addEventListener("submit", handleSecret);
     elements.searchForm.addEventListener("submit", handleSearch);
