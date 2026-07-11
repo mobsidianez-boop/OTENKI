@@ -1189,7 +1189,7 @@
                 <span>カメラで雲を推定</span>
               </div>
               <div class="sky-camera" id="skyCamera">
-                <video id="skyVideo" playsinline muted></video>
+                <video id="skyVideo" playsinline webkit-playsinline autoplay muted></video>
                 <div class="sky-placeholder">空にカメラを向けると、雲の量や暗さから「どんな雲っぽいか」をざっくり見ます。</div>
               </div>
               <canvas id="skyCanvas" width="96" height="72" hidden></canvas>
@@ -1655,12 +1655,25 @@
 
       try {
         if (!skyStream) {
-          skyStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: "environment" }, width: { ideal: 960 }, height: { ideal: 540 } },
-            audio: false
-          });
+          const skyCameraOptions = [
+            { video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
+            { video: { facingMode: "environment" }, audio: false },
+            { video: true, audio: false }
+          ];
+
+          for (const options of skyCameraOptions) {
+            try {
+              skyStream = await navigator.mediaDevices.getUserMedia(options);
+              break;
+            } catch (cameraError) {
+              if (options === skyCameraOptions[skyCameraOptions.length - 1]) throw cameraError;
+            }
+          }
         }
         elements.skyVideo.srcObject = skyStream;
+        elements.skyVideo.setAttribute("playsinline", "");
+        elements.skyVideo.setAttribute("webkit-playsinline", "");
+        elements.skyVideo.muted = true;
         await elements.skyVideo.play();
         elements.skyCamera.classList.add("active");
         elements.skyResult.innerHTML = "<strong>カメラ起動中</strong>空を大きく入れて「雲を見てみる」を押してください。";
