@@ -885,6 +885,11 @@
         animation: none !important;
       }
 
+      button[aria-pressed="true"],
+      .primary-button {
+        animation: buttonShimmer 4.8s linear infinite !important;
+      }
+
       .sparkle:nth-child(n+13) {
         display: none;
       }
