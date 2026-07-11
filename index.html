@@ -304,6 +304,24 @@
       animation: riseIn 820ms 150ms ease both;
     }
 
+    .temperature-wrap {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .temperature-label {
+      justify-self: start;
+      border: 1px solid rgba(255,255,255,0.78);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.62);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 950;
+      padding: 7px 11px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 10px 22px rgba(69,104,255,0.08);
+    }
+
     .temperature strong {
       font-size: clamp(5.9rem, 20vw, 10.8rem);
       line-height: 0.84;
@@ -646,6 +664,7 @@
       gap: 6px;
       color: var(--ink);
       font-weight: 950;
+      flex-wrap: wrap;
     }
 
     .forecast-temp strong {
@@ -656,6 +675,20 @@
       color: var(--muted);
       font-size: 1rem;
       font-weight: 900;
+    }
+
+    .forecast-mean {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      border: 1px solid rgba(69,104,255,0.14);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.6);
+      color: var(--blue);
+      font-size: 0.9rem;
+      font-weight: 950;
+      padding: 5px 9px;
+      margin-top: 6px;
     }
 
     .forecast-rain {
@@ -984,9 +1017,12 @@
           </div>
 
           <div class="weather-grid">
-            <div class="temperature">
-              <strong id="temperature">--</strong>
-              <span>°C</span>
+            <div class="temperature-wrap">
+              <div class="temperature-label">現在の気温</div>
+              <div class="temperature">
+                <strong id="temperature">--</strong>
+                <span>°C</span>
+              </div>
             </div>
 
             <div class="condition">
@@ -1325,7 +1361,8 @@
         <div class="forecast-emoji">✨</div>
         <div>
           <div class="forecast-weather">取得中</div>
-          <div class="forecast-temp"><strong>--</strong><span>/ --</span></div>
+          <div class="forecast-temp"><strong>最高 --</strong><span>最低 --</span></div>
+          <div class="forecast-mean">平均気温 --</div>
           <div class="forecast-rain">降水 --</div>
         </div>
       </article>`;
@@ -1346,6 +1383,7 @@
       const codes = [];
       const highs = [];
       const lows = [];
+      const means = [];
       const rain = [];
 
       for (let i = 0; i < 7; i += 1) {
@@ -1355,6 +1393,7 @@
         codes.push([seed.code, 1, 2, 3, 61, 80, 0][i % 7]);
         highs.push(seed.temperature + (i % 3) - 1);
         lows.push(seed.temperature - 5 - (i % 2));
+        means.push(seed.temperature - 2 + (i % 2));
         rain.push([10, 20, 30, 45, 55, 35, 15][i]);
       }
 
@@ -1363,6 +1402,7 @@
         weather_code: codes,
         temperature_2m_max: highs,
         temperature_2m_min: lows,
+        temperature_2m_mean: means,
         precipitation_probability_max: rain
       };
     }
@@ -1452,6 +1492,7 @@
       const code = Number(daily.weather_code?.[index]);
       const high = Math.round(Number(daily.temperature_2m_max?.[index]));
       const low = Math.round(Number(daily.temperature_2m_min?.[index]));
+      const mean = Math.round(Number(daily.temperature_2m_mean?.[index]));
       const rain = daily.precipitation_probability_max?.[index];
       const [emoji, label] = getWeatherLabel(code);
 
@@ -1460,7 +1501,8 @@
         <div class="forecast-emoji" aria-hidden="true">${emoji}</div>
         <div>
           <div class="forecast-weather">${label}</div>
-          <div class="forecast-temp"><strong>${Number.isFinite(high) ? high : "--"}°</strong><span>/ ${Number.isFinite(low) ? low : "--"}°</span></div>
+          <div class="forecast-temp"><strong>最高 ${Number.isFinite(high) ? high : "--"}°</strong><span>最低 ${Number.isFinite(low) ? low : "--"}°</span></div>
+          <div class="forecast-mean">平均気温 ${Number.isFinite(mean) ? `${mean}°` : "--"}</div>
           <div class="forecast-rain">降水 ${Number.isFinite(Number(rain)) ? `${Math.round(Number(rain))}%` : "--"}</div>
         </div>
       </article>`;
@@ -1541,7 +1583,7 @@
         latitude: city.latitude,
         longitude: city.longitude,
         current: "temperature_2m,relative_humidity_2m,weather_code",
-        daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+        daily: "weather_code,temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_probability_max",
         hourly: "temperature_2m,weather_code,precipitation_probability",
         forecast_days: "7",
         timezone: "Asia/Tokyo"
