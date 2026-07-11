@@ -1737,6 +1737,167 @@
       };
     }
 
+    function readPixelProfile(data, index) {
+      const r = data[index];
+      const g = data[index + 1];
+      const b = data[index + 2];
+      const brightness = (r + g + b) / 3;
+      const spread = Math.max(r, g, b) - Math.min(r, g, b);
+      const blueDominance = b - Math.max(r, g);
+      const isBlueSky = b > r + 18 && b > g + 6 && brightness > 90;
+      const isWhiteCloud = brightness > 172 && spread < 62;
+      const isGrayCloud = brightness > 112 && brightness <= 172 && spread < 48 && blueDominance < 18;
+      const isDarkCloud = brightness > 58 && brightness <= 112 && spread < 42;
+      const isGreenObject = g > r + 18 && g > b + 14 && brightness > 50 && brightness < 195;
+      const isEarthObject = r > b + 22 && g > b + 10 && brightness > 55 && brightness < 190 && spread > 24;
+      const isVeryDarkObject = brightness <= 58;
+      const isSaturatedObject = spread > 94 && brightness < 210 && !isBlueSky;
+      const isObjectLike = isGreenObject || isEarthObject || isVeryDarkObject || isSaturatedObject;
+      const isSkyCandidate = !isObjectLike && (isBlueSky || isWhiteCloud || isGrayCloud || isDarkCloud);
+
+      return {
+        brightness,
+        isBlueSky,
+        isWhiteCloud,
+        isGrayCloud,
+        isDarkCloud,
+        isGreenObject,
+        isEarthObject,
+        isVeryDarkObject,
+        isSaturatedObject,
+        isSkyCandidate
+      };
+    }
+
+    function readSkyStats(data, width, height) {
+      const total = width * height;
+      const profiles = new Array(total);
+      const candidates = new Uint8Array(total);
+      const skyMask = new Uint8Array(total);
+      let green = 0;
+      let earth = 0;
+      let saturated = 0;
+      let veryDark = 0;
+
+      for (let pixel = 0; pixel < total; pixel += 1) {
+        const profile = readPixelProfile(data, pixel * 4);
+        profiles[pixel] = profile;
+        candidates[pixel] = profile.isSkyCandidate ? 1 : 0;
+        if (profile.isGreenObject) green += 1;
+        if (profile.isEarthObject) earth += 1;
+        if (profile.isSaturatedObject) saturated += 1;
+        if (profile.isVeryDarkObject) veryDark += 1;
+      }
+
+      const queue = [];
+      const seedRows = Math.max(1, Math.round(height * 0.18));
+      for (let y = 0; y < seedRows; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const pixel = y * width + x;
+          if (candidates[pixel] && !skyMask[pixel]) {
+            skyMask[pixel] = 1;
+            queue.push(pixel);
+          }
+        }
+      }
+
+      for (let cursor = 0; cursor < queue.length; cursor += 1) {
+        const pixel = queue[cursor];
+        const x = pixel % width;
+        const y = Math.floor(pixel / width);
+        const neighbors = [
+          x > 0 ? pixel - 1 : -1,
+          x < width - 1 ? pixel + 1 : -1,
+          y > 0 ? pixel - width : -1,
+          y < height - 1 ? pixel + width : -1
+        ];
+
+        neighbors.forEach((next) => {
+          if (next >= 0 && candidates[next] && !skyMask[next]) {
+            skyMask[next] = 1;
+            queue.push(next);
+          }
+        });
+      }
+
+      let white = 0;
+      let gray = 0;
+      let dark = 0;
+      let blue = 0;
+      let skyCount = 0;
+      let brightnessTotal = 0;
+      let brightnessSquared = 0;
+
+      skyMask.forEach((isSky, pixel) => {
+        if (!isSky) return;
+        const profile = profiles[pixel];
+        skyCount += 1;
+        brightnessTotal += profile.brightness;
+        brightnessSquared += profile.brightness * profile.brightness;
+        if (profile.isBlueSky) blue += 1;
+        else if (profile.isWhiteCloud) white += 1;
+        else if (profile.isGrayCloud) gray += 1;
+        else if (profile.isDarkCloud) dark += 1;
+      });
+
+      const safeSkyCount = Math.max(skyCount, 1);
+      const averageBrightness = brightnessTotal / safeSkyCount;
+      const brightnessVariance = brightnessSquared / safeSkyCount - averageBrightness * averageBrightness;
+
+      return {
+        whiteRatio: white / safeSkyCount,
+        grayRatio: gray / safeSkyCount,
+        darkRatio: dark / safeSkyCount,
+        blueRatio: blue / safeSkyCount,
+        greenRatio: green / total,
+        earthRatio: earth / total,
+        saturatedRatio: saturated / total,
+        veryDarkRatio: veryDark / total,
+        skyCoverage: skyCount / total,
+        skyPixelCount: skyCount,
+        averageBrightness,
+        brightnessVariance
+      };
+    }
+
+    function getSkyFrameWarning(stats) {
+      const cloudSignal = stats.whiteRatio + stats.grayRatio + stats.darkRatio;
+      const skySignal = stats.blueRatio + cloudSignal;
+      const objectSignal = stats.greenRatio + stats.earthRatio + stats.saturatedRatio + stats.veryDarkRatio;
+
+      if (stats.skyCoverage < 0.18 || skySignal < 0.18) {
+        return {
+          title: "空が少なそうです",
+          body: "上側からつながる空の領域が少ないので、まだ雲として判定しません。スマホを少し上に向けて、空を大きく入れてください。"
+        };
+      }
+      if (objectSignal > 0.34 && stats.blueRatio < 0.20) {
+        return {
+          title: "空以外が多そうです",
+          body: "木・建物・室内・影っぽい色が多めです。空ウォッチは、画面の7割くらいを空にするとかなり読みやすくなります。"
+        };
+      }
+      if (stats.skyCoverage > 0.70 && stats.blueRatio < 0.03 && stats.brightnessVariance < 85) {
+        return {
+          title: "空か壁か迷っています",
+          body: "画面がかなり均一な白や灰色です。曇り空にも見えますが、壁や天井も似た写り方になります。屋外の明るさや雲の境目が入る角度で試してください。"
+        };
+      }
+      if (stats.veryDarkRatio > 0.30 && stats.blueRatio < 0.12 && stats.averageBrightness < 95) {
+        return {
+          title: "影や室内を拾っているかも",
+          body: "暗い部分が多く、雲というより影や室内を見ている可能性があります。明るい空にカメラを向けてもう一度試してください。"
+        };
+      }
+      if (stats.blueRatio < 0.04 && cloudSignal > 0.70 && stats.averageBrightness > 118 && stats.saturatedRatio < 0.05) {
+        return {
+          title: "空か壁か迷っています",
+          body: "白や灰色が画面いっぱいに入っています。曇り空の可能性もありますが、壁や紙も似た色になります。地平線や空の明るさが少し入る角度で試してください。"
+        };
+      }
+      return null;
+    }
+
     function analyzeSkyFrame() {
       if (!elements.skyVideo.srcObject || elements.skyVideo.readyState < 2) {
         elements.skyResult.innerHTML = "<strong>まだ見られません</strong>先にカメラを開始して、空を画面に入れてください。";
@@ -1747,41 +1908,13 @@
       const context = canvas.getContext("2d", { willReadFrequently: true });
       context.drawImage(elements.skyVideo, 0, 0, canvas.width, canvas.height);
       const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
-
-      let white = 0;
-      let gray = 0;
-      let dark = 0;
-      let blue = 0;
-      let brightnessTotal = 0;
-      const total = canvas.width * canvas.height;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const brightness = (r + g + b) / 3;
-        const spread = Math.max(r, g, b) - Math.min(r, g, b);
-        const blueDominance = b - Math.max(r, g);
-        brightnessTotal += brightness;
-
-        if (b > r + 18 && b > g + 6 && brightness > 90) {
-          blue += 1;
-        } else if (brightness > 172 && spread < 62) {
-          white += 1;
-        } else if (brightness > 112 && brightness <= 172 && spread < 48 && blueDominance < 18) {
-          gray += 1;
-        } else if (brightness > 58 && brightness <= 112 && spread < 42) {
-          dark += 1;
-        }
+      const stats = readSkyStats(data, canvas.width, canvas.height);
+      const skyWarning = getSkyFrameWarning(stats);
+      if (skyWarning) {
+        const objectText = `検出した空 ${Math.round(stats.skyCoverage * 100)}% / 空以外っぽさ ${Math.round((stats.greenRatio + stats.earthRatio + stats.saturatedRatio + stats.veryDarkRatio) * 100)}%`;
+        elements.skyResult.innerHTML = `<strong>${skyWarning.title}</strong>${objectText}<br>${skyWarning.body}`;
+        return;
       }
-
-      const stats = {
-        whiteRatio: white / total,
-        grayRatio: gray / total,
-        darkRatio: dark / total,
-        blueRatio: blue / total,
-        averageBrightness: brightnessTotal / total
-      };
       const cloudType = classifyCloud(stats);
       const humidity = currentWeatherContext.humidity;
       const rainChance = getSelectedRainChance();
@@ -1790,7 +1923,7 @@
       const windText = Number.isFinite(currentWeatherContext.windSpeed)
         ? `風は${windDirectionLabel(currentWeatherContext.windDirection)}から約${Math.round(currentWeatherContext.windSpeed)}km/h`
         : "風向きはまだ取得中";
-      const coverText = `白雲 ${Math.round(stats.whiteRatio * 100)}% / 灰色雲 ${Math.round(stats.grayRatio * 100)}% / 暗い雲 ${Math.round(stats.darkRatio * 100)}% / 青空 ${Math.round(stats.blueRatio * 100)}%`;
+      const coverText = `検出した空 ${Math.round(stats.skyCoverage * 100)}% / 白雲 ${Math.round(stats.whiteRatio * 100)}% / 灰色雲 ${Math.round(stats.grayRatio * 100)}% / 暗い雲 ${Math.round(stats.darkRatio * 100)}% / 青空 ${Math.round(stats.blueRatio * 100)}%`;
       const trendText = describeSkyTrend(cloudType, stats);
 
       elements.skyResult.innerHTML = `<strong>${cloudType.name}</strong>${coverText}<br>${humidityText}、${rainText}、${windText}です。${cloudType.note}<br>${trendText}<br>これはカメラ画像からの簡易推定なので、雲の名前は目安として楽しんでください。`;
