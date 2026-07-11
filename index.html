@@ -841,11 +841,63 @@
       body {
         padding: 12px;
         place-items: stretch;
+        background:
+          radial-gradient(circle at 14% 10%, rgba(255, 212, 74, 0.45), transparent 24%),
+          radial-gradient(circle at 86% 12%, rgba(255, 85, 199, 0.34), transparent 24%),
+          linear-gradient(135deg, #eafdff 0%, #fff3fe 54%, #fff9df 100%);
+      }
+
+      body::before,
+      body::after,
+      .app::after,
+      .shooting-stars,
+      .glow-rings {
+        display: none;
+      }
+
+      .app {
+        overflow: visible;
+        background: rgba(255,255,255,0.82);
+        box-shadow: 0 18px 46px rgba(43,57,112,0.14), inset 0 1px 0 rgba(255,255,255,0.96);
+        backdrop-filter: none;
+      }
+
+      .rainbow-border,
+      .sparkle,
+      header,
+      .place,
+      .temperature,
+      .details,
+      .city-tabs,
+      .secret-panel,
+      .forecast,
+      .status,
+      .pin,
+      .temperature strong,
+      .condition,
+      .emoji,
+      .metric::before,
+      .metric::after,
+      .forecast-card::before,
+      .hourly-card::before,
+      button[aria-pressed="true"],
+      .primary-button {
+        animation: none !important;
+      }
+
+      .sparkle:nth-child(n+13) {
+        display: none;
+      }
+
+      .temperature strong,
+      .emoji,
+      .hourly-emoji {
+        filter: none;
       }
 
       .app,
       .content {
-        min-height: calc(100vh - 24px);
+        min-height: 0;
       }
 
       header {
@@ -891,6 +943,14 @@
       button {
         min-height: 50px;
         font-size: 0.95rem;
+      }
+
+      .skeleton .temperature strong,
+      .skeleton .condition,
+      .skeleton .metric strong,
+      .skeleton .forecast-card,
+      .skeleton .hourly-card {
+        animation: none;
       }
     }
   </style>
@@ -1078,6 +1138,7 @@
     let selectedForecastIndex = 0;
     let activeDailyForecast = null;
     let activeHourlyForecast = null;
+    const lightweightMode = window.matchMedia("(max-width: 720px), (prefers-reduced-motion: reduce)").matches;
 
     const passConfig = {
       salt: "OTENKI:v2:advanced-weather",
@@ -1119,8 +1180,11 @@
       const sparkleFragment = document.createDocumentFragment();
       const shootingFragment = document.createDocumentFragment();
       const ringFragment = document.createDocumentFragment();
+      const sparkleCount = lightweightMode ? 12 : 70;
+      const shootingCount = lightweightMode ? 0 : 7;
+      const ringCount = lightweightMode ? 0 : 8;
 
-      for (let i = 0; i < 70; i += 1) {
+      for (let i = 0; i < sparkleCount; i += 1) {
         const sparkle = document.createElement("span");
         sparkle.className = "sparkle";
         sparkle.style.setProperty("--x", `${Math.random() * 100}%`);
@@ -1132,7 +1196,7 @@
         sparkleFragment.appendChild(sparkle);
       }
 
-      for (let i = 0; i < 7; i += 1) {
+      for (let i = 0; i < shootingCount; i += 1) {
         const star = document.createElement("span");
         star.className = "shooting-star";
         star.style.setProperty("--x", `${-12 + Math.random() * 52}%`);
@@ -1143,7 +1207,7 @@
         shootingFragment.appendChild(star);
       }
 
-      for (let i = 0; i < 8; i += 1) {
+      for (let i = 0; i < ringCount; i += 1) {
         const ring = document.createElement("span");
         ring.className = "glow-ring";
         ring.style.setProperty("--x", `${Math.random() * 92}%`);
@@ -1208,6 +1272,12 @@
     }
 
     function animateTemperature(toValue) {
+      if (lightweightMode) {
+        currentTemperature = toValue;
+        elements.temperature.textContent = String(toValue);
+        return;
+      }
+
       const fromValue = currentTemperature;
       const start = performance.now();
       const duration = 700;
