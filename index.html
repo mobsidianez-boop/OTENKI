@@ -894,6 +894,17 @@
       font-weight: 950;
     }
 
+    .sky-preview {
+      display: block;
+      width: 100%;
+      max-height: 190px;
+      object-fit: cover;
+      border: 1px solid rgba(255,255,255,0.84);
+      border-radius: 8px;
+      margin: 0 0 10px;
+      box-shadow: 0 10px 28px rgba(24,45,98,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+
     .skeleton .temperature strong,
     .skeleton .condition,
     .skeleton .metric strong,
@@ -1890,9 +1901,30 @@
         veryDarkRatio: veryDark / total,
         skyCoverage: skyCount / total,
         skyPixelCount: skyCount,
+        skyMask,
         averageBrightness,
         brightnessVariance
       };
+    }
+
+    function buildSkyPreview(data, width, height, skyMask) {
+      const previewCanvas = document.createElement("canvas");
+      previewCanvas.width = width;
+      previewCanvas.height = height;
+      const previewContext = previewCanvas.getContext("2d");
+      const image = previewContext.createImageData(width, height);
+
+      for (let pixel = 0; pixel < skyMask.length; pixel += 1) {
+        const source = pixel * 4;
+        const isSky = skyMask[pixel] === 1;
+        image.data[source] = isSky ? data[source] : Math.round(data[source] * 0.22);
+        image.data[source + 1] = isSky ? data[source + 1] : Math.round(data[source + 1] * 0.22);
+        image.data[source + 2] = isSky ? data[source + 2] : Math.round(data[source + 2] * 0.22);
+        image.data[source + 3] = 255;
+      }
+
+      previewContext.putImageData(image, 0, 0);
+      return previewCanvas.toDataURL("image/png");
     }
 
     function getSkyFrameWarning(stats) {
@@ -1944,10 +1976,12 @@
       context.drawImage(elements.skyVideo, 0, 0, canvas.width, canvas.height);
       const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
       const stats = readSkyStats(data, canvas.width, canvas.height);
+      const previewUrl = buildSkyPreview(data, canvas.width, canvas.height, stats.skyMask);
+      const previewImage = `<img class="sky-preview" src="${previewUrl}" alt="検出した空のプレビュー。空以外は暗く表示しています。">`;
       const skyWarning = getSkyFrameWarning(stats);
       if (skyWarning) {
         const objectText = `検出した空 ${Math.round(stats.skyCoverage * 100)}% / 空以外っぽさ ${Math.round((stats.greenRatio + stats.earthRatio + stats.saturatedRatio + stats.veryDarkRatio) * 100)}%`;
-        elements.skyResult.innerHTML = `<strong>${skyWarning.title}</strong>${objectText}<br>${skyWarning.body}`;
+        elements.skyResult.innerHTML = `${previewImage}<strong>${skyWarning.title}</strong>${objectText}<br>${skyWarning.body}`;
         return;
       }
       const cloudType = classifyCloud(stats);
@@ -1961,7 +1995,7 @@
       const coverText = `空 ${Math.round(stats.skyCoverage * 100)}% / 白 ${Math.round(stats.whiteRatio * 100)}% / 灰 ${Math.round(stats.grayRatio * 100)}% / 暗 ${Math.round(stats.darkRatio * 100)}% / 青 ${Math.round(stats.blueRatio * 100)}%`;
       const trendText = describeSkyTrend(cloudType, stats);
 
-      elements.skyResult.innerHTML = `<strong>${cloudType.name}</strong>${cloudType.detail}<br>${coverText}<br>${humidityText} / ${rainText} / ${windText}<br>${cloudType.note}<br>${trendText}`;
+      elements.skyResult.innerHTML = `${previewImage}<strong>${cloudType.name}</strong>${cloudType.detail}<br>${coverText}<br>${humidityText} / ${rainText} / ${windText}<br>${cloudType.note}<br>${trendText}`;
     }
 
     function useCurrentLocationWeather() {
