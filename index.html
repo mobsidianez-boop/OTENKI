@@ -404,7 +404,8 @@
       height: 3px;
       border-radius: 999px;
       background: linear-gradient(90deg, var(--cyan), var(--pink), var(--gold), var(--green));
-      animation: pulseLine 1.8s ease-in-out infinite;
+      background-size: 220% 100%;
+      animation: rainbowLine 3.8s linear infinite, pulseLine 1.8s ease-in-out infinite;
     }
 
     .metric span,
@@ -850,6 +851,7 @@
     }
     @keyframes miniSweep { 0%, 48% { transform: translateX(-120%); } 78%, 100% { transform: translateX(120%); } }
     @keyframes pulseLine { 0%, 100% { opacity: 0.46; transform: scaleX(0.7); } 50% { opacity: 1; transform: scaleX(1); } }
+    @keyframes rainbowLine { to { background-position: 220% 50%; } }
     @keyframes selectedPulse {
       0%, 100% { box-shadow: 0 0 28px rgba(0,200,255,0.35), 0 20px 42px rgba(255, 85, 199, 0.28); }
       50% { box-shadow: 0 0 34px rgba(255,212,74,0.55), 0 24px 52px rgba(69, 104, 255, 0.32); }
@@ -910,12 +912,15 @@
       .condition,
       .emoji,
       .metric::before,
-      .metric::after,
       .forecast-card::before,
       .hourly-card::before,
       button[aria-pressed="true"],
       .primary-button {
         animation: none !important;
+      }
+
+      .metric::after {
+        animation: rainbowLine 4.8s linear infinite !important;
       }
 
       button[aria-pressed="true"],
