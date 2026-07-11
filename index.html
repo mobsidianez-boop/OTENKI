@@ -1690,11 +1690,13 @@
       const rainChance = getSelectedRainChance();
       const humid = Number.isFinite(currentWeatherContext.humidity) && currentWeatherContext.humidity >= 78;
       const rainy = Number.isFinite(rainChance) && rainChance >= 55;
+      const brightTexture = stats.brightnessVariance > 260;
 
       if (stats.darkRatio > 0.34 && stats.blueRatio < 0.14 && stats.averageBrightness < 105) {
         return {
           key: "cumulonimbus",
           name: "雨雲・積乱雲寄り",
+          detail: "詳しい候補: 積乱雲、乱層雲",
           note: "暗く厚い雲が多めです。上昇気流が強い時や、雨が近い時に見えやすいタイプです。"
         };
       }
@@ -1702,6 +1704,7 @@
         return {
           key: "nimbostratus",
           name: "厚い灰色雲寄り",
+          detail: "詳しい候補: 乱層雲、層積雲",
           note: "低く重い雲。雨の前後に出やすいです。"
         };
       }
@@ -1709,13 +1712,31 @@
         return {
           key: "stratus",
           name: "層雲・高層雲寄り",
+          detail: "詳しい候補: 層雲、高層雲、層積雲",
           note: "空を広く覆う雲。日差しが弱めです。"
+        };
+      }
+      if (stats.whiteRatio > 0.18 && stats.whiteRatio < 0.46 && stats.blueRatio > 0.22 && brightTexture && stats.darkRatio < 0.16) {
+        return {
+          key: "altocumulus",
+          name: "ひつじ雲っぽい",
+          detail: "詳しい候補: 高積雲、うろこ雲",
+          note: "白い小さな雲が並ぶ感じ。天気の変化前に見えることも。"
+        };
+      }
+      if (stats.whiteRatio > 0.08 && stats.whiteRatio < 0.30 && stats.blueRatio > 0.36 && stats.averageBrightness > 145 && stats.darkRatio < 0.12) {
+        return {
+          key: "cirrocumulus",
+          name: "うろこ雲っぽい",
+          detail: "詳しい候補: 巻積雲、巻雲",
+          note: "高い空の細かな白雲っぽい見え方です。"
         };
       }
       if (stats.whiteRatio > 0.34 && stats.grayRatio < 0.25 && stats.darkRatio < 0.16) {
         return {
           key: "white-cloud",
           name: "白い雲多め",
+          detail: "詳しい候補: 積雲、高積雲、巻積雲",
           note: "白く明るい雲を検出。積雲や薄い雲の可能性があります。"
         };
       }
@@ -1723,6 +1744,7 @@
         return {
           key: "cumulus",
           name: "積雲寄り",
+          detail: "詳しい候補: 積雲、層積雲",
           note: "白くもこもこした雲。午後に育つことがあります。"
         };
       }
@@ -1730,6 +1752,7 @@
         return {
           key: "cirrus",
           name: "薄雲・巻雲寄り",
+          detail: "詳しい候補: 巻雲、巻層雲",
           note: "薄く明るい雲。天気の変わり目に出ることも。"
         };
       }
@@ -1737,12 +1760,14 @@
         return {
           key: "silhouette",
           name: "逆光・影が多いかも",
+          detail: "詳しい候補: 判定保留",
           note: "暗い部分は多いですが、雲というより建物・木・逆光の影を拾っている可能性があります。空だけが大きく入るようにすると判定しやすくなります。"
         };
       }
       return {
         key: "clear",
         name: "青空多め",
+        detail: "詳しい候補: 雲少なめ",
         note: "雲は少なめ。晴れ寄りの空です。"
       };
     }
@@ -1936,7 +1961,7 @@
       const coverText = `空 ${Math.round(stats.skyCoverage * 100)}% / 白 ${Math.round(stats.whiteRatio * 100)}% / 灰 ${Math.round(stats.grayRatio * 100)}% / 暗 ${Math.round(stats.darkRatio * 100)}% / 青 ${Math.round(stats.blueRatio * 100)}%`;
       const trendText = describeSkyTrend(cloudType, stats);
 
-      elements.skyResult.innerHTML = `<strong>${cloudType.name}</strong>${coverText}<br>${humidityText} / ${rainText} / ${windText}<br>${cloudType.note}<br>${trendText}`;
+      elements.skyResult.innerHTML = `<strong>${cloudType.name}</strong>${cloudType.detail}<br>${coverText}<br>${humidityText} / ${rainText} / ${windText}<br>${cloudType.note}<br>${trendText}`;
     }
 
     function useCurrentLocationWeather() {
